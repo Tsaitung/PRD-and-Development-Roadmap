@@ -21,11 +21,15 @@ class MPMDashboard {
             const filePath = '../../TOC%20Modules.md';
             console.log('嘗試載入文件:', filePath);
             
-            const response = await fetch(filePath);
+            // 添加時間戳防止快取
+            const timestamp = new Date().getTime();
+            const response = await fetch(`${filePath}?t=${timestamp}`);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             const tocContent = await response.text();
+            console.log('文件載入成功，內容長度:', tocContent.length);
+            console.log('文件前100字符:', tocContent.substring(0, 100));
             
             // 解析 TOC 內容
             this.data = this.parseTOCContent(tocContent);
@@ -53,7 +57,7 @@ class MPMDashboard {
         };
 
         // 解析模組數據
-        const modulePattern = /(\d+)\.\s*\[([A-Z]+)\]\s*(.+?)(?=\n\d+\.|$)/gs;
+        const modulePattern = /^(\d+)\.\s*\[([A-Z]+)\]\s*(.+?)(?=\n\d+\.|$)/gm;
         let moduleMatch;
         
         console.log('開始解析模組數據...');
@@ -90,7 +94,7 @@ class MPMDashboard {
         const moduleName = moduleContent.split('\n')[0].trim();
         
         // 解析子模組
-        const submodulePattern = /(\d+\.\d+)\.\s*\[([A-Z-]+)\]\s*(.+?)(?=\n\d+\.\d+\.|$)/gs;
+        const submodulePattern = /^(\d+\.\d+)\.\s*\[([A-Z-]+)\]\s*(.+?)(?=\n\d+\.\d+\.|$)/gm;
         const submodules = [];
         let submoduleMatch;
         
@@ -108,7 +112,7 @@ class MPMDashboard {
         }
         
         // 解析更深層的子模組（如 2.3.1, 2.3.1a 等）
-        const deepSubmodulePattern = /(\d+\.\d+\.\d+[a-z]?)\.\s*\[([A-Z-]+)\]\s*(.+?)(?=\n\d+\.\d+\.\d+[a-z]?\.|$)/gs;
+        const deepSubmodulePattern = /^(\d+\.\d+\.\d+[a-z]?)\.\s*\[([A-Z-]+)\]\s*(.+?)(?=\n\d+\.\d+\.\d+[a-z]?\.|$)/gm;
         let deepSubmoduleMatch;
         
         while ((deepSubmoduleMatch = deepSubmodulePattern.exec(moduleContent)) !== null) {
