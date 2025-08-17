@@ -2,7 +2,7 @@
 class MPMDashboard {
     constructor() {
         this.data = null;
-        this.charts = {};
+
         this.init();
     }
 
@@ -34,8 +34,7 @@ class MPMDashboard {
             // 解析 TOC 內容
             this.data = this.parseTOCContent(tocContent);
             
-            // 生成圖表數據
-            this.data.charts = this.generateChartData();
+
             
         } catch (error) {
             console.error('載入路徑:', filePath);
@@ -146,53 +145,9 @@ class MPMDashboard {
 
 
 
-    generateChartData() {
-        console.log('生成圖表數據，模組數量:', this.data.modules.length);
-        
-        const statusCounts = {
-            completed: 0,
-            'in-progress': 0,
-            draft: 0,
-            'not-started': 0
-        };
 
-        this.data.modules.forEach(module => {
-            statusCounts[module.status]++;
-        });
 
-        console.log('狀態統計:', statusCounts);
 
-        const chartData = {
-            progressDistribution: {
-                labels: ['已完成', '開發中', '草稿', '未開始'],
-                data: [
-                    statusCounts.completed,
-                    statusCounts['in-progress'],
-                    statusCounts.draft,
-                    statusCounts['not-started']
-                ],
-                colors: ['#10B981', '#F59E0B', '#3B82F6', '#EF4444']
-            },
-            moduleProgress: {
-                labels: this.data.modules.map(m => m.code),
-                data: this.data.modules.map(m => m.progress),
-                colors: this.data.modules.map(m => this.getStatusColor(m.status))
-            }
-        };
-
-        console.log('生成的圖表數據:', chartData);
-        return chartData;
-    }
-
-    getStatusColor(status) {
-        const colors = {
-            'completed': '#10B981',
-            'in-progress': '#F59E0B',
-            'draft': '#3B82F6',
-            'not-started': '#EF4444'
-        };
-        return colors[status] || '#6B7280';
-    }
 
     getStatusText(status) {
         const texts = {
@@ -206,7 +161,6 @@ class MPMDashboard {
 
     renderDashboard() {
         this.updateOverviewCards();
-        this.renderCharts();
         this.renderModuleTable();
         this.renderMPMContent();
     }
@@ -228,174 +182,7 @@ class MPMDashboard {
         document.getElementById('completed-count').textContent = this.data.completedCount;
     }
 
-    renderCharts() {
-        this.renderProgressChart();
-        this.renderModuleChart();
-    }
 
-    renderProgressChart() {
-        const ctx = document.getElementById('progressChart').getContext('2d');
-        
-        if (this.charts.progressChart) {
-            this.charts.progressChart.destroy();
-        }
-
-        // 檢查數據是否有效
-        console.log('進度分布數據:', this.data.charts.progressDistribution);
-        
-        // 確保數據有效
-        const labels = this.data.charts.progressDistribution.labels || [];
-        const data = this.data.charts.progressDistribution.data || [];
-        const colors = this.data.charts.progressDistribution.colors || [];
-        
-        // 如果沒有數據，顯示空狀態
-        if (labels.length === 0 || data.length === 0) {
-            console.log('沒有進度分布數據，顯示空圖表');
-            this.charts.progressChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['無數據'],
-                    datasets: [{
-                        data: [1],
-                        backgroundColor: ['#E5E7EB'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true
-                            }
-                        }
-                    }
-                }
-            });
-            return;
-        }
-
-        this.charts.progressChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: colors,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    renderModuleChart() {
-        const ctx = document.getElementById('moduleChart').getContext('2d');
-        
-        if (this.charts.moduleChart) {
-            this.charts.moduleChart.destroy();
-        }
-
-        // 檢查數據是否有效
-        console.log('圖表數據:', this.data.charts.moduleProgress);
-        
-        // 確保數據有效
-        const labels = this.data.charts.moduleProgress.labels || [];
-        const data = this.data.charts.moduleProgress.data || [];
-        const colors = this.data.charts.moduleProgress.colors || [];
-        
-        // 如果沒有數據，顯示空狀態
-        if (labels.length === 0 || data.length === 0) {
-            console.log('沒有模組數據，顯示空圖表');
-            this.charts.moduleChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['無數據'],
-                    datasets: [{
-                        label: '進度 (%)',
-                        data: [0],
-                        backgroundColor: ['#E5E7EB'],
-                        borderColor: ['#E5E7EB'],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            min: 0,
-                            ticks: {
-                                stepSize: 20,
-                                callback: function(value) {
-                                    return value + '%';
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-            return;
-        }
-
-        this.charts.moduleChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '進度 (%)',
-                    data: data,
-                    backgroundColor: colors,
-                    borderColor: colors,
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        min: 0,
-                        ticks: {
-                            stepSize: 20,
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
-        });
-    }
 
     renderModuleTable() {
         const tbody = document.getElementById('module-table-body');
