@@ -68,18 +68,100 @@ PRD-and-Development-Roadmap/
 │
 ├── 📋 PRD 文件結構
 │   └── PRD/
-│       ├── 01-DSH-Dashboard/               # 儀表板模組
-│       ├── 02-CRM-Customer_Relationship_Management/  # 客戶管理模組
-│       ├── 03-IM-Item_Management/          # 品項管理模組
-│       ├── 04-OM-Order_Management/         # 訂單管理模組
-│       ├── 05-MES-Manufacturing_Execution_System/    # 生產管理模組
-│       ├── 06-WMS-Warehouse_Management_System/  # 庫存管理模組
-│       ├── 07-PM-Purchasing_Management/    # 採購管理模組
-│       ├── 08-LM-Logistics_Management/     # 物流管理模組
-│       ├── 09-FA-Finance_Accounting/       # 財務會計模組
-│       ├── 10-BI-Analytics_Business_Intelligence/    # 分析 & BI 模組
-│       ├── 11-SA-System_Administration/    # 系統管理模組
-│       └── 12-UP-User_Profile/             # 使用者個人資訊模組
+│       ├── 01-DSH-Dashboard/                           # 儀表板模組
+│       │   ├── 01.1-DSH-OV-Dashboard_Overview/        # 儀表板總覽
+│       │   └── 01.2-DSH-NC-Notification_Center/       # 通知中心
+│       │
+│       ├── 02-CRM-Customer_Relationship_Management/    # 客戶管理模組
+│       │   ├── 02.1-CRM-CM-Customer_Master/           # 客戶主檔
+│       │   ├── 02.2-CRM-CS-Customer_Segmentation/     # 客戶級距分群
+│       │   ├── 02.3-CRM-PM-Pricing_Management/        # 定價管理
+│       │   │   ├── 02.3.1-CRM-PM-DBPE-Dynamic_Base_Pricing_Engine/  # 動態基礎訂價引擎
+│       │   │   │   ├── 02.3.1a-CRM-PM-DBPE-CBC-Cost_Benchmark_Classification/      # 成本對標分類設定
+│       │   │   │   ├── 02.3.1b-CRM-PM-DBPE-MPS-Market_Price_Setting/              # 時價設定
+│       │   │   │   ├── 02.3.1c-CRM-PM-DBPE-CIPM-Cost_Import_Parsing_Module/       # 成本導入與解析模組
+│       │   │   │   ├── 02.3.1d-CRM-PM-DBPE-CBECC-Cost_Benchmark_Effective_Cost_Calculation/  # 成本對標有效成本計算
+│       │   │   │   ├── 02.3.1e-CRM-PM-DBPE-MQLM-Market_Quotation_Logic_Module/     # 行情與報價邏輯模組
+│       │   │   │   └── 02.3.1f-CRM-PM-DBPE-BPOM-Base_Pricing_Output_Module_API/   # 報價輸出模組 API
+│       │   │   ├── 02.3.2-CRM-PM-CTAM-Customer_Tier_Adjustment_Management/        # 客戶分級調整管理
+│       │   │   ├── 02.3.3-CRM-PM-SRP-Seasonality_Risk_Premium/                    # 季節性風險溢價
+│       │   │   ├── 02.3.4-CRM-PM-CFRP-Credit_Financial_Risk_Premium/              # 信用與資金風險溢價
+│       │   │   ├── 02.3.5-CRM-PM-SVR-Single_Volume_Rate/                          # 單一量體費率
+│       │   │   ├── 02.3.6-CRM-PM-ER-Exception_Review/                             # 例外審核
+│       │   │   └── 02.3.7-CRM-PM-RA-Reports_Analytics/                            # 報表與分析
+│       │   ├── 02.4-CRM-CSCM-Customer_Service_Complaint_Management/               # 客戶服務客訴管理
+│       │   ├── 02.5-CRM-CRA-Customer_Relationship_Analytics/                      # 客戶關係分析
+│       │   └── 02.6-CRM-CMR-Customer_Management_Review/                           # 客戶管理及審核
+│       │
+│       ├── 03-IM-Item_Management/                     # 品項管理模組
+│       │   ├── 03.1-IM-IM-Item_Master/                # 品項主檔
+│       │   ├── 03.2-IM-BCRS-BOM_Conversion_Relationship_Setting/  # BOM 轉換關聯設定
+│       │   ├── 03.3-IM-UPS-Unit_Packaging_Specifications/         # 單位與包裝規格
+│       │   └── 03.4-IM-IAC-Item_Analytics_Usage_Cycle/            # 品項分析週期用量
+│       │
+│       ├── 04-OM-Order_Management/                    # 訂單管理模組
+│       │   ├── 04.1-OM-OL-Order_List/                 # 訂單列表
+│       │   ├── 04.2-OM-COSR-Create_Order_Sales_Return/ # 建立訂單銷退單
+│       │   ├── 04.3-OM-OAPM-Order_Allocation_Production_Mapping/  # 訂單分貨對應生產
+│       │   ├── 04.4-OM-RRP-Return_RMA_Processing/     # 退貨 RMA 處理
+│       │   └── 04.5-OM-OA-Order_Analytics/            # 訂單分析
+│       │
+│       ├── 05-MES-Manufacturing_Execution_System/     # 生產管理模組
+│       │   ├── 05.1-MES-WTM-Workstation_Task_Management/          # 工作站派工管理
+│       │   ├── 05.2-MES-PSWO-Production_Scheduling_Work_Orders/   # 生產排程工單
+│       │   ├── 05.3-MES-MBU-Material_Batch_Usage/                 # 材料批號使用
+│       │   ├── 05.4-MES-PEMLD-Personnel_Efficiency_Material_Loss_Dashboard/  # 人員效率物料損耗儀表板
+│       │   └── 05.5-MES-PMR-Progress_Monitoring_Reports/          # 進度監控報表
+│       │
+│       ├── 06-WMS-Warehouse_Management_System/        # 庫存管理模組
+│       │   ├── 06.1-WMS-IOD-Inventory_Overview_Details/           # 庫存概況明細
+│       │   ├── 06.2-WMS-RIS-Receiving_Inspection_Shipping/        # 入庫驗收出庫
+│       │   ├── 06.3-WMS-BTM-Batch_Traceability_Management/        # 批號溯源管理
+│       │   ├── 06.4-WMS-IAT-Inventory_Adjustment_Transfer/        # 庫存調整移位
+│       │   └── 06.5-WMS-RQIA-Remaining_Quantity_InTransit_Analysis/  # 餘量在途分析
+│       │
+│       ├── 07-PM-Purchasing_Management/               # 採購管理模組
+│       │   ├── 07.1-PM-SRM-Supplier_Relationship_Management/      # 供應商管理
+│       │   │   ├── 07.1.1-PM-SRM-SMO-Supplier_Management_Overview/  # 供應商管理總覽
+│       │   │   ├── 07.1.2-PM-SRM-SL-Supplier_List/                # 供應商清單
+│       │   │   ├── 07.1.3-PM-SRM-LMR-Loss_Management_Returns/     # 損耗管理及退貨
+│       │   │   ├── 07.1.4-PM-SRM-SA-Supplier_Accounting/          # 供應商帳務
+│       │   │   └── 07.1.5-PM-SRM-RS-Review_Scoring/               # 審核與評分
+│       │   ├── 07.2-PM-CPM-Contract_Pricing_Management/           # 合約定價管理
+│       │   ├── 07.3-PM-PODM-Purchase_Order_Delivery_Management/   # 採購單交期管理
+│       │   ├── 07.4-PM-RIS-Receiving_Inspection_Status/           # 進貨驗收狀態
+│       │   └── 07.5-PM-PAR-Purchasing_Analytics_Reports/          # 採購分析報表
+│       │
+│       ├── 08-LM-Logistics_Management/                # 物流管理模組
+│       │   ├── 08.1-LM-DSRO-Delivery_Scheduling_Route_Optimization/  # 配送排程路線優化
+│       │   ├── 08.2-LM-DVM-Driver_Vehicle_Management/               # 司機車輛管理
+│       │   ├── 08.3-LM-ESDR-Electronic_Signing_Delivery_Reporting/  # 電子簽單配送回報
+│       │   ├── 08.4-LM-DTRV-Delivery_Tracking_RealTime_View/        # 配送追蹤即時視圖
+│       │   ├── 08.5-LM-CM-Contract_Management/                      # 合約管理
+│       │   └── 08.6-LM-LCPA-Logistics_Cost_Performance_Analytics/   # 物流費用績效分析
+│       │
+│       ├── 09-FA-Finance_Accounting/                  # 財務會計模組
+│       │   ├── 09.1-FA-AR-Accounts_Receivable/        # 應收帳款 AR
+│       │   ├── 09.2-FA-AP-Accounts_Payable/           # 應付帳款 AP
+│       │   ├── 09.3-FA-PMAR-Payment_Management_Account_Reconciliation/  # 付款管理帳務對帳
+│       │   ├── 09.4-FA-IT-Invoice_Tax/                # 發票稅務
+│       │   └── 09.5-FA-FR-Financial_Reports/          # 財務報表
+│       │
+│       ├── 10-BI-Analytics_Business_Intelligence/     # 分析 BI 模組
+│       │   ├── 10.1-BI-DF-Demand_Forecasting/         # 需求預測
+│       │   ├── 10.2-BI-PIK-Production_Inventory_KPI/  # 生產庫存 KPI
+│       │   ├── 10.3-BI-SCA-Sales_Customer_Analytics/  # 銷售客戶分析
+│       │   ├── 10.4-BI-FKPA-Financial_KPI_Profitability_Analysis/  # 財務 KPI 獲利分析
+│       │   └── 10.5-BI-AIMM-AI_Model_Management/      # AI 模型管理
+│       │
+│       ├── 11-SA-System_Administration/               # 系統管理模組
+│       │   ├── 11.1-SA-UPM-User_Permission_Management/             # 使用者權限管理
+│       │   ├── 11.2-SA-SC-System_Configuration/                    # 系統設定
+│       │   ├── 11.3-SA-NWS-Notification_Workflow_Settings/         # 通知工作流程設定
+│       │   ├── 11.4-SA-SLM-System_Logs_Monitoring/                 # 系統日誌監控
+│       │   └── 11.5-SA-OBM-Organization_Branch_Management/         # 組織區域部門管理
+│       │
+│       └── 12-UP-User_Profile/                        # 使用者個人資訊模組
 │
 └── 🔧 配置檔案
     ├── .gitignore                          # Git 忽略檔案
