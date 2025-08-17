@@ -134,6 +134,7 @@ class MPMDashboard {
         
         data.totalSubmodules = submoduleCount;
         console.log(`解析完成: ${data.totalModules} 個模組, ${data.totalSubmodules} 個子模組`);
+        console.log('模組數據:', data.modules.map(m => `${m.code}: ${m.submoduleCount} 子模組`));
 
         // 計算整體進度
         if (data.totalSubmodules > 0) {
@@ -215,6 +216,7 @@ class MPMDashboard {
         circle.style.strokeDashoffset = offset;
 
         // 更新其他卡片
+        document.getElementById('total-modules').textContent = this.data.totalModules;
         document.getElementById('total-submodules').textContent = this.data.totalSubmodules;
         document.getElementById('completed-count').textContent = this.data.completedCount;
     }
@@ -283,7 +285,9 @@ class MPMDashboard {
                     y: {
                         beginAtZero: true,
                         max: 100,
+                        min: 0,
                         ticks: {
+                            stepSize: 20,
                             callback: function(value) {
                                 return value + '%';
                             }
