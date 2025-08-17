@@ -56,30 +56,83 @@ class MPMDashboard {
             lastUpdated: new Date().toLocaleString('zh-TW')
         };
 
-        // 解析模組數據
-        const modulePattern = /^(\d+)\.\s*\[([A-Z]+)\]\s*(.+?)(?=\n\d+\.|$)/gm;
-        let moduleMatch;
-        
-        console.log('開始解析模組數據...');
-        
-        while ((moduleMatch = modulePattern.exec(content)) !== null) {
-            const moduleNum = parseInt(moduleMatch[1]);
-            const moduleCode = moduleMatch[2];
-            const moduleContent = moduleMatch[3].trim();
-            
-            console.log(`解析模組 ${moduleNum}: ${moduleCode} - ${moduleContent.split('\n')[0]}`);
-            
-            const moduleData = this.parseModuleSection(moduleNum, moduleCode, moduleContent);
-            if (moduleData) {
-                data.modules.push(moduleData);
-                data.totalModules++;
-                data.totalSubmodules += moduleData.submoduleCount;
-                if (moduleData.status === 'completed') {
-                    data.completedCount++;
-                }
-            }
+        // 找到模組部分
+        const moduleSection = content.split('## 完整模組階層結構')[1];
+        if (!moduleSection) {
+            console.error('找不到模組階層結構部分');
+            return data;
         }
+
+        // 逐行解析
+        const lines = moduleSection.split('\n');
+        let currentModule = null;
+        let moduleCount = 0;
+        let submoduleCount = 0;
         
+        console.log('開始逐行解析模組數據...');
+        
+        lines.forEach((line, index) => {
+            // 檢查主要模組
+            const moduleMatch = line.match(/^(\d+)\.\s*\[([A-Z]+)\]\s*(.+)/);
+            if (moduleMatch) {
+                moduleCount++;
+                const moduleNum = parseInt(moduleMatch[1]);
+                const moduleCode = moduleMatch[2];
+                const moduleName = moduleMatch[3].trim();
+                
+                console.log(`解析模組 ${moduleNum}: ${moduleCode} - ${moduleName}`);
+                
+                currentModule = {
+                    number: moduleNum,
+                    code: moduleCode,
+                    name: moduleName,
+                    submodules: [],
+                    submoduleCount: 0,
+                    completedCount: 0,
+                    progress: 0,
+                    status: 'not-started'
+                };
+                
+                data.modules.push(currentModule);
+                data.totalModules++;
+            }
+            
+            // 檢查子模組
+            const submoduleMatch = line.match(/^\s*(\d+\.\d+)\.\s*\[([A-Z-]+)\]\s*(.+)/);
+            if (submoduleMatch && currentModule) {
+                submoduleCount++;
+                const subNum = submoduleMatch[1];
+                const subCode = submoduleMatch[2];
+                const subName = submoduleMatch[3].trim();
+                
+                currentModule.submodules.push({
+                    number: subNum,
+                    code: subCode,
+                    name: subName,
+                    status: 'not-started'
+                });
+                currentModule.submoduleCount++;
+            }
+            
+            // 檢查深層子模組
+            const deepSubmoduleMatch = line.match(/^\s*(\d+\.\d+\.\d+[a-z]?)\.\s*\[([A-Z-]+)\]\s*(.+)/);
+            if (deepSubmoduleMatch && currentModule) {
+                submoduleCount++;
+                const subNum = deepSubmoduleMatch[1];
+                const subCode = deepSubmoduleMatch[2];
+                const subName = deepSubmoduleMatch[3].trim();
+                
+                currentModule.submodules.push({
+                    number: subNum,
+                    code: subCode,
+                    name: subName,
+                    status: 'not-started'
+                });
+                currentModule.submoduleCount++;
+            }
+        });
+        
+        data.totalSubmodules = submoduleCount;
         console.log(`解析完成: ${data.totalModules} 個模組, ${data.totalSubmodules} 個子模組`);
 
         // 計算整體進度
@@ -90,67 +143,7 @@ class MPMDashboard {
         return data;
     }
 
-    parseModuleSection(moduleNum, moduleCode, moduleContent) {
-        const moduleName = moduleContent.split('\n')[0].trim();
-        
-        // 解析子模組
-        const submodulePattern = /^(\d+\.\d+)\.\s*\[([A-Z-]+)\]\s*(.+?)(?=\n\d+\.\d+\.|$)/gm;
-        const submodules = [];
-        let submoduleMatch;
-        
-        while ((submoduleMatch = submodulePattern.exec(moduleContent)) !== null) {
-            const subNum = submoduleMatch[1];
-            const subCode = submoduleMatch[2];
-            const subName = submoduleMatch[3].trim();
-            
-            submodules.push({
-                number: subNum,
-                code: subCode,
-                name: subName,
-                status: 'not-started' // 預設狀態，後續可從 PRD 文件讀取
-            });
-        }
-        
-        // 解析更深層的子模組（如 2.3.1, 2.3.1a 等）
-        const deepSubmodulePattern = /^(\d+\.\d+\.\d+[a-z]?)\.\s*\[([A-Z-]+)\]\s*(.+?)(?=\n\d+\.\d+\.\d+[a-z]?\.|$)/gm;
-        let deepSubmoduleMatch;
-        
-        while ((deepSubmoduleMatch = deepSubmodulePattern.exec(moduleContent)) !== null) {
-            const subNum = deepSubmoduleMatch[1];
-            const subCode = deepSubmoduleMatch[2];
-            const subName = deepSubmoduleMatch[3].trim();
-            
-            submodules.push({
-                number: subNum,
-                code: subCode,
-                name: subName,
-                status: 'not-started'
-            });
-        }
-        
-        const submoduleCount = submodules.length;
-        const completedCount = 0; // 預設為 0，後續可從 PRD 文件讀取
-        
-        // 計算進度
-        const progress = submoduleCount > 0 ? Math.round((completedCount / submoduleCount) * 100) : 0;
-        
-        // 判斷狀態
-        let status = 'not-started';
-        if (progress === 100) status = 'completed';
-        else if (progress > 50) status = 'in-progress';
-        else if (progress > 0) status = 'draft';
 
-        return {
-            number: moduleNum,
-            code: moduleCode,
-            name: moduleName,
-            submodules: submodules,
-            submoduleCount,
-            completedCount,
-            progress,
-            status
-        };
-    }
 
     generateChartData() {
         const statusCounts = {
