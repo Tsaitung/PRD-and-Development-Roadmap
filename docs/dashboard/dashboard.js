@@ -18,7 +18,10 @@ class MPMDashboard {
             this.showLoading(true);
             
             // 載入 TOC Modules 數據
-            const response = await fetch('../../TOC Modules.md');
+            const filePath = '../../TOC%20Modules.md';
+            console.log('嘗試載入文件:', filePath);
+            
+            const response = await fetch(filePath);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
@@ -31,6 +34,7 @@ class MPMDashboard {
             this.data.charts = this.generateChartData();
             
         } catch (error) {
+            console.error('載入路徑:', filePath);
             console.error('載入 TOC Modules.md 失敗:', error);
             this.showError(`載入模組架構失敗: ${error.message}`);
         } finally {
@@ -52,10 +56,14 @@ class MPMDashboard {
         const modulePattern = /(\d+)\.\s*\[([A-Z]+)\]\s*(.+?)(?=\n\d+\.|$)/gs;
         let moduleMatch;
         
+        console.log('開始解析模組數據...');
+        
         while ((moduleMatch = modulePattern.exec(content)) !== null) {
             const moduleNum = parseInt(moduleMatch[1]);
             const moduleCode = moduleMatch[2];
             const moduleContent = moduleMatch[3].trim();
+            
+            console.log(`解析模組 ${moduleNum}: ${moduleCode} - ${moduleContent.split('\n')[0]}`);
             
             const moduleData = this.parseModuleSection(moduleNum, moduleCode, moduleContent);
             if (moduleData) {
@@ -67,6 +75,8 @@ class MPMDashboard {
                 }
             }
         }
+        
+        console.log(`解析完成: ${data.totalModules} 個模組, ${data.totalSubmodules} 個子模組`);
 
         // 計算整體進度
         if (data.totalSubmodules > 0) {
@@ -94,6 +104,23 @@ class MPMDashboard {
                 code: subCode,
                 name: subName,
                 status: 'not-started' // 預設狀態，後續可從 PRD 文件讀取
+            });
+        }
+        
+        // 解析更深層的子模組（如 2.3.1, 2.3.1a 等）
+        const deepSubmodulePattern = /(\d+\.\d+\.\d+[a-z]?)\.\s*\[([A-Z-]+)\]\s*(.+?)(?=\n\d+\.\d+\.\d+[a-z]?\.|$)/gs;
+        let deepSubmoduleMatch;
+        
+        while ((deepSubmoduleMatch = deepSubmodulePattern.exec(moduleContent)) !== null) {
+            const subNum = deepSubmoduleMatch[1];
+            const subCode = deepSubmoduleMatch[2];
+            const subName = deepSubmoduleMatch[3].trim();
+            
+            submodules.push({
+                number: subNum,
+                code: subCode,
+                name: subName,
+                status: 'not-started'
             });
         }
         
