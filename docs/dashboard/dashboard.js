@@ -17,71 +17,88 @@ class MPMDashboard {
         try {
             this.showLoading(true);
             
-            // 載入 MPM 數據
-            const response = await fetch('../TOC_Module_Progress_Matrix.md');
-            const mpmContent = await response.text();
+            // 載入 TOC Modules 數據
+            const response = await fetch('../../TOC Modules.md');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            const tocContent = await response.text();
             
-            // 解析 MPM 內容
-            this.data = this.parseMPMContent(mpmContent);
+            // 解析 TOC 內容
+            this.data = this.parseTOCContent(tocContent);
             
-            // 模擬其他數據（實際應用中會從 API 獲取）
+            // 生成圖表數據
             this.data.charts = this.generateChartData();
             
         } catch (error) {
-            console.error('載入數據失敗:', error);
-            this.showError('載入數據失敗，請檢查網路連接');
+            console.error('載入 TOC Modules.md 失敗:', error);
+            this.showError(`載入模組架構失敗: ${error.message}`);
         } finally {
             this.showLoading(false);
         }
     }
 
-    parseMPMContent(content) {
+    parseTOCContent(content) {
         const data = {
             overallProgress: 0,
-            totalModules: 12,
-            totalSubmodules: 54,
+            totalModules: 0,
+            totalSubmodules: 0,
             completedCount: 0,
             modules: [],
             lastUpdated: new Date().toLocaleString('zh-TW')
         };
 
-        // 解析進度統計
-        const progressMatch = content.match(/整體進度.*?(\d+)%/);
-        if (progressMatch) {
-            data.overallProgress = parseInt(progressMatch[1]);
-        }
-
         // 解析模組數據
-        const moduleSections = content.split(/### \d+\. \[/);
-        moduleSections.slice(1).forEach(section => {
-            const moduleData = this.parseModuleSection(section);
+        const modulePattern = /(\d+)\.\s*\[([A-Z]+)\]\s*(.+?)(?=\n\d+\.|$)/gs;
+        let moduleMatch;
+        
+        while ((moduleMatch = modulePattern.exec(content)) !== null) {
+            const moduleNum = parseInt(moduleMatch[1]);
+            const moduleCode = moduleMatch[2];
+            const moduleContent = moduleMatch[3].trim();
+            
+            const moduleData = this.parseModuleSection(moduleNum, moduleCode, moduleContent);
             if (moduleData) {
                 data.modules.push(moduleData);
+                data.totalModules++;
+                data.totalSubmodules += moduleData.submoduleCount;
                 if (moduleData.status === 'completed') {
                     data.completedCount++;
                 }
             }
-        });
+        }
+
+        // 計算整體進度
+        if (data.totalSubmodules > 0) {
+            data.overallProgress = Math.round((data.completedCount / data.totalSubmodules) * 100);
+        }
 
         return data;
     }
 
-    parseModuleSection(section) {
-        const lines = section.split('\n');
-        const firstLine = lines[0];
+    parseModuleSection(moduleNum, moduleCode, moduleContent) {
+        const moduleName = moduleContent.split('\n')[0].trim();
         
-        // 提取模組資訊
-        const moduleMatch = firstLine.match(/^([A-Z]+)\].*?([^[]+)$/);
-        if (!moduleMatch) return null;
-
-        const moduleCode = moduleMatch[1];
-        const moduleName = moduleMatch[2].trim();
+        // 解析子模組
+        const submodulePattern = /(\d+\.\d+)\.\s*\[([A-Z-]+)\]\s*(.+?)(?=\n\d+\.\d+\.|$)/gs;
+        const submodules = [];
+        let submoduleMatch;
         
-        // 計算子模組數量
-        const submoduleCount = (section.match(/\|.*?FR-\d{3}.*?\|/g) || []).length;
+        while ((submoduleMatch = submodulePattern.exec(moduleContent)) !== null) {
+            const subNum = submoduleMatch[1];
+            const subCode = submoduleMatch[2];
+            const subName = submoduleMatch[3].trim();
+            
+            submodules.push({
+                number: subNum,
+                code: subCode,
+                name: subName,
+                status: 'not-started' // 預設狀態，後續可從 PRD 文件讀取
+            });
+        }
         
-        // 計算完成數量
-        const completedCount = (section.match(/✅ 完成/g) || []).length;
+        const submoduleCount = submodules.length;
+        const completedCount = 0; // 預設為 0，後續可從 PRD 文件讀取
         
         // 計算進度
         const progress = submoduleCount > 0 ? Math.round((completedCount / submoduleCount) * 100) : 0;
@@ -93,8 +110,10 @@ class MPMDashboard {
         else if (progress > 0) status = 'draft';
 
         return {
+            number: moduleNum,
             code: moduleCode,
             name: moduleName,
+            submodules: submodules,
             submoduleCount,
             completedCount,
             progress,

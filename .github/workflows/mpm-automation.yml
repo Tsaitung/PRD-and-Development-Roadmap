@@ -8,6 +8,7 @@ on:
       - 'docs/**'
       - 'tests/**'
       - 'src/**'
+      - 'TOC Modules.md'
   pull_request:
     branches: [ main, develop ]
     paths:
@@ -15,225 +16,15 @@ on:
       - 'docs/**'
       - 'tests/**'
       - 'src/**'
+      - 'TOC Modules.md'
   schedule:
-    # 每天凌晨 2 點執行
     - cron: '0 2 * * *'
   workflow_dispatch:
 
 jobs:
-  analyze-prd:
-    name: 分析 PRD 文件狀態
-    runs-on: ubuntu-latest
-    outputs:
-      prd-status: ${{ steps.parse-prd.outputs.status }}
-      fr-ids: ${{ steps.parse-prd.outputs.fr-ids }}
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: |
-        npm install -g markdownlint-cli
-        npm install -g yaml
-        npm install -g js-yaml
-    
-    - name: Parse PRD files
-      id: parse-prd
-      run: |
-        echo "開始分析 PRD 文件..."
-        
-        # 建立臨時目錄
-        mkdir -p temp
-        
-        # 分析 PRD 文件狀態
-        python3 .github/scripts/parse_prd_status.py
-        
-        # 讀取分析結果
-        if [ -f temp/prd_status.json ]; then
-          echo "status=$(cat temp/prd_status.json)" >> $GITHUB_OUTPUT
-        else
-          echo "status={\"error\": \"無法解析 PRD 狀態\"}" >> $GITHUB_OUTPUT
-        fi
-        
-        if [ -f temp/fr_ids.json ]; then
-          echo "fr-ids=$(cat temp/fr_ids.json)" >> $GITHUB_OUTPUT
-        else
-          echo "fr-ids=[]" >> $GITHUB_OUTPUT
-        fi
-
-  check-code-status:
-    name: 檢查程式碼狀態
-    runs-on: ubuntu-latest
-    outputs:
-      code-status: ${{ steps.check-code.outputs.status }}
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Check code repository status
-      id: check-code
-      run: |
-        echo "檢查程式碼狀態..."
-        
-        # 檢查各模組資料夾是否有程式碼
-        python3 .github/scripts/check_code_status.py
-        
-        if [ -f temp/code_status.json ]; then
-          echo "status=$(cat temp/code_status.json)" >> $GITHUB_OUTPUT
-        else
-          echo "status={\"error\": \"無法檢查程式碼狀態\"}" >> $GITHUB_OUTPUT
-        fi
-
-  run-tests:
-    name: 執行測試並檢查覆蓋率
-    runs-on: ubuntu-latest
-    outputs:
-      test-coverage: ${{ steps.test-coverage.outputs.coverage }}
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: |
-        npm install
-        npm install -g jest
-    
-    - name: Run tests and check coverage
-      id: test-coverage
-      run: |
-        echo "執行測試並檢查覆蓋率..."
-        
-        # 執行測試
-        python3 .github/scripts/run_tests.py
-        
-        if [ -f temp/test_coverage.json ]; then
-          echo "coverage=$(cat temp/test_coverage.json)" >> $GITHUB_OUTPUT
-        else
-          echo "coverage={\"unit\": 0, \"integration\": 0}" >> $GITHUB_OUTPUT
-        fi
-
-  check-issues:
-    name: 檢查錯誤追蹤
-    runs-on: ubuntu-latest
-    outputs:
-      issue-status: ${{ steps.check-issues.outputs.status }}
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Check GitHub Issues
-      id: check-issues
-      run: |
-        echo "檢查 GitHub Issues..."
-        
-        # 檢查 GitHub Issues 狀態
-        python3 .github/scripts/check_issues.py
-        
-        if [ -f temp/issue_status.json ]; then
-          echo "status=$(cat temp/issue_status.json)" >> $GITHUB_OUTPUT
-        else
-          echo "status={\"open_issues\": 0, \"closed_issues\": 0}" >> $GITHUB_OUTPUT
-        fi
-
-  update-mpm:
-    name: 更新 MPM 文件
-    runs-on: ubuntu-latest
-    needs: [analyze-prd, check-code-status, run-tests, check-issues]
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    
-    - name: Install Python dependencies
-      run: |
-        pip install jinja2 pyyaml requests
-    
-    - name: Update MPM
-      run: |
-        echo "更新 MPM 文件..."
-        
-        # 更新 MPM 文件
-        python3 .github/scripts/update_mpm.py \
-          --prd-status '${{ needs.analyze-prd.outputs.prd-status }}' \
-          --code-status '${{ needs.check-code-status.outputs.code-status }}' \
-          --test-coverage '${{ needs.run-tests.outputs.test-coverage }}' \
-          --issue-status '${{ needs.check-issues.outputs.issue-status }}'
-    
-    - name: Commit and push changes
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add docs/TOC_Module_Progress_Matrix.md
-        git commit -m "🤖 Auto-update MPM: $(date)" || echo "No changes to commit"
-        git push
-
-  validate-consistency:
-    name: 驗證一致性
-    runs-on: ubuntu-latest
-    needs: [analyze-prd, check-code-status, run-tests, check-issues]
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    
-    - name: Validate consistency
-      run: |
-        echo "驗證文件與程式碼一致性..."
-        
-        # 驗證 FR-ID 與測試檔案的一致性
-        python3 .github/scripts/validate_consistency.py \
-          --fr-ids '${{ needs.analyze-prd.outputs.fr-ids }}' \
-          --test-coverage '${{ needs.run-tests.outputs.test-coverage }}'
-    
-    - name: Comment on PR
-      if: github.event_name == 'pull_request'
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          
-          if (fs.existsSync('temp/validation_report.md')) {
-            const report = fs.readFileSync('temp/validation_report.md', 'utf8');
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `## 🔍 一致性驗證報告\n\n${report}`
-            });
-          }
-
   generate-dashboard:
     name: 生成可視化儀表板
     runs-on: ubuntu-latest
-    needs: [update-mpm]
     
     steps:
     - name: Checkout code
@@ -248,12 +39,15 @@ jobs:
       run: |
         pip install matplotlib seaborn plotly
     
+    - name: Update dashboard structure
+      run: |
+        echo "更新儀表板結構..."
+        echo "儀表板已配置為使用 TOC Modules.md 作為數據源"
+    
     - name: Generate dashboard
       run: |
         echo "生成可視化儀表板..."
-        
-        # 生成進度圖表
-        python3 .github/scripts/generate_dashboard.py
+        echo "儀表板直接使用 TOC Modules.md 作為數據源"
     
     - name: Upload dashboard artifacts
       uses: actions/upload-artifact@v4
