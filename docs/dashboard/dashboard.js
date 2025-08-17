@@ -147,6 +147,8 @@ class MPMDashboard {
 
 
     generateChartData() {
+        console.log('生成圖表數據，模組數量:', this.data.modules.length);
+        
         const statusCounts = {
             completed: 0,
             'in-progress': 0,
@@ -158,7 +160,9 @@ class MPMDashboard {
             statusCounts[module.status]++;
         });
 
-        return {
+        console.log('狀態統計:', statusCounts);
+
+        const chartData = {
             progressDistribution: {
                 labels: ['已完成', '開發中', '草稿', '未開始'],
                 data: [
@@ -175,6 +179,9 @@ class MPMDashboard {
                 colors: this.data.modules.map(m => this.getStatusColor(m.status))
             }
         };
+
+        console.log('生成的圖表數據:', chartData);
+        return chartData;
     }
 
     getStatusColor(status) {
@@ -233,13 +240,51 @@ class MPMDashboard {
             this.charts.progressChart.destroy();
         }
 
+        // 檢查數據是否有效
+        console.log('進度分布數據:', this.data.charts.progressDistribution);
+        
+        // 確保數據有效
+        const labels = this.data.charts.progressDistribution.labels || [];
+        const data = this.data.charts.progressDistribution.data || [];
+        const colors = this.data.charts.progressDistribution.colors || [];
+        
+        // 如果沒有數據，顯示空狀態
+        if (labels.length === 0 || data.length === 0) {
+            console.log('沒有進度分布數據，顯示空圖表');
+            this.charts.progressChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['無數據'],
+                    datasets: [{
+                        data: [1],
+                        backgroundColor: ['#E5E7EB'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+            return;
+        }
+
         this.charts.progressChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: this.data.charts.progressDistribution.labels,
+                labels: labels,
                 datasets: [{
-                    data: this.data.charts.progressDistribution.data,
-                    backgroundColor: this.data.charts.progressDistribution.colors,
+                    data: data,
+                    backgroundColor: colors,
                     borderWidth: 0
                 }]
             },
@@ -266,15 +311,64 @@ class MPMDashboard {
             this.charts.moduleChart.destroy();
         }
 
+        // 檢查數據是否有效
+        console.log('圖表數據:', this.data.charts.moduleProgress);
+        
+        // 確保數據有效
+        const labels = this.data.charts.moduleProgress.labels || [];
+        const data = this.data.charts.moduleProgress.data || [];
+        const colors = this.data.charts.moduleProgress.colors || [];
+        
+        // 如果沒有數據，顯示空狀態
+        if (labels.length === 0 || data.length === 0) {
+            console.log('沒有模組數據，顯示空圖表');
+            this.charts.moduleChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['無數據'],
+                    datasets: [{
+                        label: '進度 (%)',
+                        data: [0],
+                        backgroundColor: ['#E5E7EB'],
+                        borderColor: ['#E5E7EB'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            min: 0,
+                            ticks: {
+                                stepSize: 20,
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            return;
+        }
+
         this.charts.moduleChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: this.data.charts.moduleProgress.labels,
+                labels: labels,
                 datasets: [{
                     label: '進度 (%)',
-                    data: this.data.charts.moduleProgress.data,
-                    backgroundColor: this.data.charts.moduleProgress.colors,
-                    borderColor: this.data.charts.moduleProgress.colors,
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: colors,
                     borderWidth: 1
                 }]
             },
