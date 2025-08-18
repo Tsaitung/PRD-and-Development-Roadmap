@@ -3,78 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>菜蟲農食 ERP 追蹤系統</title>
+    <title>菜蟲農食 ERP 系統 - 專案追蹤平台</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+        * {
             margin: 0;
-            background-color: #f5f5f5;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .container {
-            text-align: center;
-            padding: 40px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 600px;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-        p {
-            color: #666;
-            margin-bottom: 30px;
-        }
-        .buttons {
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             display: flex;
-            gap: 20px;
+            align-items: center;
             justify-content: center;
-            flex-wrap: wrap;
+            color: #333;
         }
-        a {
-            display: inline-block;
-            padding: 12px 24px;
-            background-color: #4A90E2;
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+        }
+        
+        .links {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .link-card {
+            display: block;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             text-decoration: none;
-            border-radius: 5px;
-            transition: background-color 0.3s;
+            border-radius: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
-        a:hover {
-            background-color: #357ABD;
+        
+        .link-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
         }
-        .secondary {
-            background-color: #6c757d;
+        
+        .link-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: left 0.5s ease;
         }
-        .secondary:hover {
-            background-color: #5a6268;
+        
+        .link-card:hover::before {
+            left: 100%;
+        }
+        
+        .link-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .link-desc {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .status {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f0f4ff;
+            border-radius: 10px;
+            color: #667eea;
+        }
+        
+        .emoji {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>菜蟲農食 ERP 追蹤系統</h1>
-        <p>歡迎使用整合後的專案追蹤平台！</p>
+        <span class="emoji">🌟</span>
+        <h1>菜蟲農食 ERP 系統</h1>
+        <p class="subtitle">專案追蹤與管理平台</p>
         
-        <div class="buttons">
-            <a href="tracking-platform/index.html">
-                <strong>統一追蹤平台</strong><br>
-                <small>推薦使用</small>
+        <div class="links">
+            <a href="tracking-platform/" class="link-card">
+                <div class="link-title">📊 統一追蹤平台</div>
+                <div class="link-desc">即時查看所有模組進度、趨勢分析與團隊協作</div>
             </a>
             
-            <a href="https://github.com/user/repo" class="secondary" target="_blank">
-                GitHub 專案
+            <a href="https://github.com/Tsaitung/PRD-and-Development-Roadmap" class="link-card">
+                <div class="link-title">💻 GitHub 倉庫</div>
+                <div class="link-desc">查看原始碼、PRD 文件與開發指南</div>
+            </a>
+            
+            <a href="https://github.com/Tsaitung/PRD-and-Development-Roadmap/blob/main/TOC%20Modules.md" class="link-card">
+                <div class="link-title">📋 模組進度矩陣</div>
+                <div class="link-desc">查看詳細的模組狀態追蹤表格</div>
             </a>
         </div>
         
-        <p style="margin-top: 40px; font-size: 14px; color: #999;">
-            <em>原有的 dashboard 和 progress-report 已整合至統一追蹤平台</em>
-        </p>
+        <div class="status">
+            <strong>系統狀態：</strong>運行中 ✅<br>
+            <small>最後更新：<span id="lastUpdate">載入中...</span></small>
+        </div>
     </div>
+    
+    <script>
+        // 顯示最後更新時間
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleString('zh-TW');
+        
+        // 預載追蹤平台
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = 'tracking-platform/';
+        document.head.appendChild(link);
+    </script>
 </body>
 </html>
