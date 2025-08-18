@@ -86,7 +86,7 @@
 - **響應式設計** - 支援桌面、平板、手機
 
 ### 🚀 訪問方式
-- **GitHub Pages**: `https://[your-username].github.io/[repo-name]/`
+- **GitHub Pages**: `https://tsaitung.github.io/PRD-and-Development-Roadmap/`
 - **本地開發**: 
   ```bash
   cd docs/tracking-platform
@@ -120,7 +120,7 @@ chmod +x enhanced_auto_sync.sh
 ```
 
 ### 3. 查看進度
-- 訪問 GitHub Pages 上的追蹤平台
+- 訪問 GitHub Pages 上的追蹤平台：https://tsaitung.github.io/PRD-and-Development-Roadmap/
 - 查看 TOC Modules.md 的進度矩陣
 - 檢查 GitHub Actions 執行狀態
 
