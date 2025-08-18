@@ -265,10 +265,109 @@ watch_mode() {
     done
 }
 
-# 檢查參數
-if [[ "$1" == "--watch" ]] || [[ "$1" == "-w" ]]; then
+# 新增函數：背景守護模式
+daemon_mode() {
+    print_message $PURPLE "🔮 啟動背景守護模式"
+    print_message $YELLOW "💡 PID: $$"
+    print_message $YELLOW "💡 日誌: auto_sync_daemon.log"
+    print_separator
+    
+    # 創建日誌文件
+    LOG_FILE="auto_sync_daemon.log"
+    
+    # 背景執行監控
+    {
+        while true; do
+            # 檢查是否有變更
+            if ! git diff --quiet || ! git diff --staged --quiet || [[ -n $(git ls-files --others --exclude-standard) ]]; then
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] 偵測到變更，執行同步..." >> "$LOG_FILE"
+                # 執行同步但不顯示輸出
+                ./enhanced_auto_sync.sh --silent >> "$LOG_FILE" 2>&1
+            fi
+            sleep "${DAEMON_INTERVAL:-300}"  # 預設5分鐘，可通過環境變數調整
+        done
+    } &
+    
+    DAEMON_PID=$!
+    echo $DAEMON_PID > auto_sync_daemon.pid
+    print_message $GREEN "✅ 守護程序已啟動 (PID: $DAEMON_PID)"
+    print_message $YELLOW "💡 停止守護程序: kill \$(cat auto_sync_daemon.pid)"
+}
+
+# 新增函數：靜默模式執行
+silent_mode() {
+    # 執行所有操作但不顯示輸出
+    {
+        check_environment
+        run_status_check
+        show_status_changes
+        generate_progress_report
+        update_dashboard
+        commit_and_push
+    } > /dev/null 2>&1
+    
+    # 只在有錯誤時顯示
+    if [[ $? -ne 0 ]]; then
+        echo "❌ 自動同步失敗"
+        exit 1
+    fi
+}
+
+# 解析命令行參數
+WATCH_MODE=false
+DAEMON_MODE=false
+SILENT_MODE=false
+AUTO_COMMIT=false
+INTERVAL=60
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --watch|-w)
+            WATCH_MODE=true
+            shift
+            ;;
+        --daemon|-d)
+            DAEMON_MODE=true
+            shift
+            ;;
+        --silent|-s)
+            SILENT_MODE=true
+            shift
+            ;;
+        --auto-commit|-a)
+            AUTO_COMMIT=true
+            shift
+            ;;
+        --interval|-i)
+            INTERVAL="$2"
+            shift 2
+            ;;
+        --help|-h)
+            echo "使用方式: $0 [選項]"
+            echo ""
+            echo "選項:"
+            echo "  --watch, -w        監控模式，持續偵測變更"
+            echo "  --daemon, -d       背景守護模式"
+            echo "  --silent, -s       靜默模式，不顯示輸出"
+            echo "  --auto-commit, -a  自動提交，無需確認"
+            echo "  --interval, -i     設定檢查間隔（秒）"
+            echo "  --help, -h         顯示此說明"
+            exit 0
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+# 根據參數執行對應模式
+if [[ "$DAEMON_MODE" == true ]]; then
+    DAEMON_INTERVAL=$INTERVAL daemon_mode
+elif [[ "$WATCH_MODE" == true ]]; then
     watch_mode
+elif [[ "$SILENT_MODE" == true ]]; then
+    silent_mode
 else
     # 執行主函數
-    main "$@"
+    main
 fi
