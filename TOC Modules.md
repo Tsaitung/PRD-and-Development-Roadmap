@@ -1,5 +1,23 @@
 # 菜蟲農食 ERP — 完整模組 / 子模組階層（更新版）
 
+## 📊 專案追蹤狀態說明
+
+### 狀態圖例：
+- ✅ 完成
+- 🟡 開發中
+- 🔴 未開始
+- ⚪ 規劃中
+
+### 追蹤維度：
+1. **舊系統狀態** - 現有系統是否運行中
+2. **新系統更新** - 是否已更新至新系統
+3. **PRD完成度** - 產品需求文件完成狀態
+4. **系統整合** - 是否已整合進 repo
+5. **單元測試** - 單元測試撰寫狀態（TDD標準）
+6. **整合測試** - 整合測試完成狀態
+7. **錯誤追蹤** - GitHub Issues 連結
+8. **上線進度** - 部署上線百分比
+
 ## 模組縮寫說明
 
 ### 主要模組縮寫（2-3個字母）：
@@ -32,11 +50,22 @@
 
 ## 完整模組階層結構
 
-1. [DSH] Dashboard 首頁 / 儀表板
+### 1. [DSH] Dashboard 首頁 / 儀表板
     1.1. [DSH-OV] Dashboard Overview 總覽儀表板
     1.2. [DSH-NC] Notification Center 即時訊息 / 通知中心
 
-2. [CRM] Customer Relationship Management (CRM) 客戶管理
+#### 📊 DSH 模組狀態追蹤
+| 維度 | 狀態 | 說明 |
+|------|------|------|
+| 舊系統狀態 | 🔴 | 無舊系統 |
+| 新系統更新 | 🟡 | 開發中 |
+| PRD完成度 | ✅ | 部分完成 |
+| 系統整合 | 🟡 | 部分整合 |
+| 單元測試 | 🔴 | 未開始 |
+| 整合測試 | 🔴 | 未開始 |
+| 錯誤追蹤 | - | 無相關 issues |
+| 上線進度 | 45% | Dashboard 基礎框架已完成 |
+### 2. [CRM] Customer Relationship Management (CRM) 客戶管理
     2.1. [CRM-CM] Customer Master 客戶主檔
     2.2. [CRM-CS] Customer Segmentation 客戶級距 / 分群
     2.3. [CRM-PM] Pricing Management 定價(標單)管理
@@ -59,7 +88,18 @@
     2.6. [CRM-CMR] Customer Management & Review 客戶管理及審核
     2.7. [CRM-TM] Ticket Management 客服工單（/admin/ticket-management.tsx）
 
-3. [BDM] Basic Data Maintenance 基本資料維護（新）
+#### 📊 CRM 模組狀態追蹤
+| 維度 | 狀態 | 說明 |
+|------|------|------|
+| 舊系統狀態 | ✅ | 舊系統運行中 |
+| 新系統更新 | 🟡 | 部分功能開發中 |
+| PRD完成度 | ⚪ | CRM-PM 已完成，其他進行中 |
+| 系統整合 | 🟡 | 客服工單已整合 |
+| 單元測試 | 🔴 | 未開始 |
+| 整合測試 | 🔴 | 未開始 |
+| 錯誤追蹤 | - | 無相關 issues |
+| 上線進度 | 25% | 基礎架構設計中 |
+### 3. [BDM] Basic Data Maintenance 基本資料維護（新）
     3.1. [BDM-UNIT] Unit Dictionary 計量單位字典（/tsaitung_data/unit.tsx）
     3.2. [BDM-ICAT] Item Category Dictionary 品項類別字典（大宗/半成品/成品…）
     3.3. [BDM-UCONV] Unit Conversion Rules 單位換算規則（公斤↔件↔箱等）
@@ -67,13 +107,35 @@
 
     備註：此模組提供「全域字典」。品項個別的包裝/單位綁定仍在 IM 管理。
 
-4. [IM] Item Management 品項管理
+#### 📊 BDM 模組狀態追蹤
+| 維度 | 狀態 | 說明 |
+|------|------|------|
+| 舊系統狀態 | 🔴 | 無舊系統 |
+| 新系統更新 | 🟡 | 開發中 |
+| PRD完成度 | ✅ | BDM-UNIT PRD 已完成 |
+| 系統整合 | 🟡 | unit.tsx 已整合 |
+| 單元測試 | 🔴 | 未開始 |
+| 整合測試 | 🔴 | 未開始 |
+| 錯誤追蹤 | - | 無相關 issues |
+| 上線進度 | 45% | 基礎字典架構設計中 |
+### 4. [IM] Item Management 品項管理
     4.1. [IM-IM] Item Master 品項主檔（含：可採購/可販售屬性）
     4.2. [IM-BCRS] BOM / Conversion Relationship Setting BOM / 轉換關聯設定（例：蒜末1KG ← 多來源原料0.9KG…）
     4.3. [IM-UPS] Unit & Packaging Specifications 品項層級的包裝/單位綁定（引用 BDM-UNIT、BDM-UCONV）
     4.4. [IM-IAC] Item Analytics / Usage Cycle 品項分析 / 週期用量
 
-5. [OP] Operations Planning 營運計劃 / 休市管理（新）
+#### 📊 IM 模組狀態追蹤
+| 維度 | 狀態 | 說明 |
+|------|------|------|
+| 舊系統狀態 | ✅ | 舊系統運行中 |
+| 新系統更新 | 🟡 | 未開始 |
+| PRD完成度 | ⚪ | 規劃中 |
+| 系統整合 | 🟡 | 未開始 |
+| 單元測試 | 🔴 | 未開始 |
+| 整合測試 | 🔴 | 未開始 |
+| 錯誤追蹤 | - | 無相關 issues |
+| 上線進度 | 25% | 尚未開始 |
+### 5. [OP] Operations Planning 營運計劃 / 休市管理（新）
     5.1. [OP-MC] Market Close Management 市場休市管理（/admin/market-close.tsx）
     5.2. [OP-CAL] Operations Calendar 營運日曆（節慶、颱風假、黑名單日）
     5.3. [OP-ODP] Order/Delivery Planning 下單/出貨日策略（休市日禁止下單、出貨時段門檻）
@@ -81,28 +143,72 @@
 
     與 OM/PM/MES/LM 整合：休市即時影響接單、採購、排程與配送。
 
-6. [OM] Order Management 訂單管理
+#### 📊 OP 模組狀態追蹤
+| 維度 | 狀態 | 說明 |
+|------|------|------|
+| 舊系統狀態 | 🔴 | 無舊系統 |
+| 新系統更新 | 🟡 | 開發中 |
+| PRD完成度 | ✅ | OP-MC PRD 已完成 |
+| 系統整合 | 🟡 | market-close.tsx 已整合 |
+| 單元測試 | 🔴 | 未開始 |
+| 整合測試 | 🔴 | 未開始 |
+| 錯誤追蹤 | - | 無相關 issues |
+| 上線進度 | 45% | 休市管理基礎功能已完成 |
+### 6. [OM] Order Management 訂單管理
     6.1. [OM-OL] Order List 訂單列表
     6.2. [OM-COSR] Create Order / Sales Return 建立訂單 / 銷退單（人工、API、影像辨識）
     6.3. [OM-OAPM] Order Allocation / Production Mapping 訂單分貨 / 對應生產
     6.4. [OM-RRP] Return / RMA Processing 退貨 / RMA
     6.5. [OM-OA] Order Analytics 訂單分析
 
-7. [MES] Manufacturing Execution System (MES) 生產管理
+#### 📊 OM 模組狀態追蹤
+| 維度 | 狀態 | 說明 |
+|------|------|------|
+| 舊系統狀態 | ✅ | 舊系統運行中 |
+| 新系統更新 | 🟡 | 未開始 |
+| PRD完成度 | ⚪ | 規劃中 |
+| 系統整合 | 🟡 | 未開始 |
+| 單元測試 | 🔴 | 未開始 |
+| 整合測試 | 🔴 | 未開始 |
+| 錯誤追蹤 | - | 無相關 issues |
+| 上線進度 | 25% | 尚未開始 |
+### 7. [MES] Manufacturing Execution System (MES) 生產管理
     7.1. [MES-WTM] Workstation / Task Management 工作站 / 派工管理（包裝、出車、分採買站台）
     7.2. [MES-PSWO] Production Scheduling & Work Orders 生產排程 & 工單
     7.3. [MES-MBU] Material & Batch Usage 材料 & 批號使用（掃碼扣料、損耗計算）
     7.4. [MES-PEMLD] Personnel Efficiency & Material Loss Dashboard 人員效率 & 物料損耗儀表板
     7.5. [MES-PMR] Progress Monitoring & Reports 進度監控 & 報表
 
-8. [WMS] Warehouse Management System (WMS) 庫存管理
+#### 📊 MES 模組狀態追蹤
+| 維度 | 狀態 | 說明 |
+|------|------|------|
+| 舊系統狀態 | ✅ | 舊系統運行中 |
+| 新系統更新 | 🟡 | 未開始 |
+| PRD完成度 | ⚪ | 規劃中 |
+| 系統整合 | 🟡 | 未開始 |
+| 單元測試 | 🔴 | 未開始 |
+| 整合測試 | 🔴 | 未開始 |
+| 錯誤追蹤 | - | 無相關 issues |
+| 上線進度 | 25% | 尚未開始 |
+### 8. [WMS] Warehouse Management System (WMS) 庫存管理
     8.1. [WMS-IOD] Inventory Overview / Inventory Details 庫存概況 / 明細
     8.2. [WMS-RIS] Receiving & Inspection / Shipping 入庫 & 驗收 / 出庫
     8.3. [WMS-BTM] Batch & Traceability Management 批號 & 溯源
     8.4. [WMS-IAT] Inventory Adjustment / Transfer 庫存調整 / 移位
     8.5. [WMS-RQIA] Remaining Quantity / In-Transit Analysis 餘量 / 在途分析
 
-9. [PM] Purchasing Management 採購管理
+#### 📊 WMS 模組狀態追蹤
+| 維度 | 狀態 | 說明 |
+|------|------|------|
+| 舊系統狀態 | ✅ | 舊系統運行中 |
+| 新系統更新 | 🟡 | 未開始 |
+| PRD完成度 | ⚪ | 規劃中 |
+| 系統整合 | 🟡 | 未開始 |
+| 單元測試 | 🔴 | 未開始 |
+| 整合測試 | 🔴 | 未開始 |
+| 錯誤追蹤 | - | 無相關 issues |
+| 上線進度 | 25% | 尚未開始 |
+### 9. [PM] Purchasing Management 採購管理
     9.1. [PM-SRM] Supplier Relationship Management (SRM) 供應商管理
         9.1.1. [PM-SRM-SMO] Supplier Management Overview 總覽
         9.1.2. [PM-SRM-SL] Supplier List 清單
@@ -114,7 +220,18 @@
     9.4. [PM-RIS] Receiving & Inspection Status 進貨 & 驗收狀態
     9.5. [PM-PAR] Purchasing Analytics & Reports 採購分析 & 報表
 
-10. [LM] Logistics Management 物流管理
+#### 📊 PM 模組狀態追蹤
+| 維度 | 狀態 | 說明 |
+|------|------|------|
+| 舊系統狀態 | ✅ | 舊系統運行中 |
+| 新系統更新 | 🟡 | 未開始 |
+| PRD完成度 | ⚪ | 規劃中 |
+| 系統整合 | 🟡 | 未開始 |
+| 單元測試 | 🔴 | 未開始 |
+| 整合測試 | 🔴 | 未開始 |
+| 錯誤追蹤 | - | 無相關 issues |
+| 上線進度 | 25% | 尚未開始 |
+### 10. [LM] Logistics Management 物流管理
     10.1. [LM-DSRO] Delivery Scheduling & Route Optimization 配送排程 & 路線優化
     10.2. [LM-DVM] Driver & Vehicle Management 司機 & 車輛管理（含班表）
     10.3. [LM-ESDR] Electronic Signing & Delivery Reporting 電子簽單 & 配送回報
@@ -122,7 +239,18 @@
     10.5. [LM-CM] Contract Management 合約管理（承攬、維保）
     10.6. [LM-LCPA] Logistics Cost & Performance Analytics 物流費用 & 績效分析
 
-11. [FA] Finance & Accounting 財務會計
+#### 📊 LM 模組狀態追蹤
+| 維度 | 狀態 | 說明 |
+|------|------|------|
+| 舊系統狀態 | ✅ | 舊系統運行中 |
+| 新系統更新 | 🟡 | 未開始 |
+| PRD完成度 | ⚪ | 規劃中 |
+| 系統整合 | 🟡 | 未開始 |
+| 單元測試 | 🔴 | 未開始 |
+| 整合測試 | 🔴 | 未開始 |
+| 錯誤追蹤 | - | 無相關 issues |
+| 上線進度 | 25% | 尚未開始 |
+### 11. [FA] Finance & Accounting 財務會計
     11.1. [FA-AR] Accounts Receivable (AR) 應收帳款 (AR)
     11.2. [FA-AP] Accounts Payable (AP) 應付帳款 (AP)
     11.3. [FA-PMAR] Payment Management & Account Reconciliation 付款管理 & 帳務對帳
@@ -132,22 +260,66 @@
         11.6.1. [FA-FS-RU] Revenue Update 營收更新（/admin/revenue.tsx）
         11.6.2. [FA-FS-MS] Monthly Statement 月結單（/admin/monthly-statement.tsx）
 
-12. [BI] Analytics & Business Intelligence (BI) 分析 & BI
+#### 📊 FA 模組狀態追蹤
+| 維度 | 狀態 | 說明 |
+|------|------|------|
+| 舊系統狀態 | ✅ | 舊系統運行中 |
+| 新系統更新 | 🟡 | 部分功能開發中 |
+| PRD完成度 | ⚪ | FA-FS 子模組 PRD 已完成 |
+| 系統整合 | 🟡 | revenue.tsx, monthly-statement.tsx 已整合 |
+| 單元測試 | 🔴 | 未開始 |
+| 整合測試 | 🔴 | 未開始 |
+| 錯誤追蹤 | - | 無相關 issues |
+| 上線進度 | 25% | 財務結算基礎功能已完成 |
+### 12. [BI] Analytics & Business Intelligence (BI) 分析 & BI
     12.1. [BI-DF] Demand Forecasting 需求預測
     12.2. [BI-PIK] Production & Inventory KPI 生產 & 庫存 KPI
     12.3. [BI-SCA] Sales & Customer Analytics 銷售 & 客戶分析
     12.4. [BI-FKPA] Financial KPI & Profitability Analysis 財務 KPI & 獲利分析
     12.5. [BI-AIMM] AI Model Management AI 模型管理
 
-13. [SA] System Administration 系統管理
+#### 📊 BI 模組狀態追蹤
+| 維度 | 狀態 | 說明 |
+|------|------|------|
+| 舊系統狀態 | 🔴 | 無舊系統 |
+| 新系統更新 | 🟡 | 規劃中 |
+| PRD完成度 | ⚪ | 規劃中 |
+| 系統整合 | 🟡 | 未開始 |
+| 單元測試 | 🔴 | 未開始 |
+| 整合測試 | 🔴 | 未開始 |
+| 錯誤追蹤 | - | 無相關 issues |
+| 上線進度 | 25% | 尚未開始 |
+### 13. [SA] System Administration 系統管理
     13.1. [SA-UPM] User & Permission Management 使用者 & 權限
     13.2. [SA-SC] System Configuration 系統設定
     13.3. [SA-NWS] Notification / Workflow Settings 通知 / 工作流程設定
     13.4. [SA-SLM] System Logs & Monitoring 系統日誌 & 監控
     13.5. [SA-OBM] Organization & Branch Management 組織 / 區域 / 部門管理（支援北/中/南等 Region）
 
-14. [UP] User Profile 登出 / 個人資訊
+#### 📊 SA 模組狀態追蹤
+| 維度 | 狀態 | 說明 |
+|------|------|------|
+| 舊系統狀態 | ✅ | 舊系統運行中 |
+| 新系統更新 | 🟡 | 部分功能開發中 |
+| PRD完成度 | ⚪ | 規劃中 |
+| 系統整合 | 🟡 | 基礎權限系統已整合 |
+| 單元測試 | 🔴 | 未開始 |
+| 整合測試 | 🔴 | 未開始 |
+| 錯誤追蹤 | - | 無相關 issues |
+| 上線進度 | 25% | 基礎系統架構已完成 |
+### 14. [UP] User Profile 登出 / 個人資訊
 
+#### 📊 UP 模組狀態追蹤
+| 維度 | 狀態 | 說明 |
+|------|------|------|
+| 舊系統狀態 | ✅ | 舊系統運行中 |
+| 新系統更新 | 🟡 | 基礎功能已更新 |
+| PRD完成度 | ⚪ | 規劃中 |
+| 系統整合 | 🟡 | 基礎功能已整合 |
+| 單元測試 | 🔴 | 未開始 |
+| 整合測試 | 🔴 | 未開始 |
+| 錯誤追蹤 | - | 無相關 issues |
+| 上線進度 | 25% | 登入登出功能已完成 |
 ---
 
 ## 資料夾結構對應
@@ -178,3 +350,40 @@
 - **[OP]** 營運計劃：管理休市和營運日曆
 - **[CRM-TM]** 客服工單：新增客服功能
 - **[FA-FS]** 財務結算：新增財務結算子模組
+
+---
+
+## 📈 整體專案狀態統計
+
+### 模組狀態概覽
+| 模組 | 舊系統 | 新系統 | PRD | 整合 | 單元測試 | 整合測試 | 上線進度 |
+|------|--------|--------|-----|------|----------|----------|----------|
+| DSH  | 🔴     | 🟡     | 🟡  | 🟡   | 🔴       | 🔴       | 30%      |
+| CRM  | ✅     | 🟡     | 🟡  | 🟡   | 🔴       | 🔴       | 25%      |
+| BDM  | 🔴     | 🟡     | 🟡  | 🟡   | 🔴       | 🔴       | 15%      |
+| IM   | ✅     | 🔴     | ⚪  | 🔴   | 🔴       | 🔴       | 0%       |
+| OP   | 🔴     | 🟡     | 🟡  | 🟡   | 🔴       | 🔴       | 20%      |
+| OM   | ✅     | 🔴     | ⚪  | 🔴   | 🔴       | 🔴       | 0%       |
+| MES  | ✅     | 🔴     | ⚪  | 🔴   | 🔴       | 🔴       | 0%       |
+| WMS  | ✅     | 🔴     | ⚪  | 🔴   | 🔴       | 🔴       | 0%       |
+| PM   | ✅     | 🔴     | ⚪  | 🔴   | 🔴       | 🔴       | 0%       |
+| LM   | ✅     | 🔴     | ⚪  | 🔴   | 🔴       | 🔴       | 0%       |
+| FA   | ✅     | 🟡     | 🟡  | 🟡   | 🔴       | 🔴       | 15%      |
+| BI   | 🔴     | ⚪     | ⚪  | 🔴   | 🔴       | 🔴       | 0%       |
+| SA   | ✅     | 🟡     | ⚪  | 🟡   | 🔴       | 🔴       | 10%      |
+| UP   | ✅     | 🟡     | ⚪  | 🟡   | 🔴       | 🔴       | 20%      |
+
+### 總體進度統計
+- **有舊系統運行**: 10/14 (71%)
+- **新系統開發中**: 6/14 (43%)
+- **PRD 已完成或進行中**: 5/14 (36%)
+- **已開始整合**: 6/14 (43%)
+- **單元測試完成**: 0/14 (0%)
+- **整合測試完成**: 0/14 (0%)
+- **平均上線進度**: 9%
+
+### 優先處理項目
+1. **急需 TDD 測試覆蓋**: 所有模組皆未開始單元測試
+2. **PRD 待完成**: IM、OM、MES、WMS、PM、LM 等 6 個模組
+3. **整合待啟動**: 8 個模組尚未開始系統整合
+4. **錯誤追蹤系統**: 需建立 GitHub Issues 整合機制

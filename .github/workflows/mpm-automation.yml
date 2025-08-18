@@ -22,13 +22,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  generate-dashboard:
-    name: 生成可視化儀表板
+  check-module-status:
+    name: 檢查模組狀態
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Setup Python
       uses: actions/setup-python@v4
@@ -39,19 +41,67 @@ jobs:
       run: |
         pip install matplotlib seaborn plotly
     
-    - name: Update dashboard structure
+    - name: Run module status check
       run: |
-        echo "更新儀表板結構..."
-        echo "儀表板已配置為使用 TOC Modules.md 作為數據源"
+        echo "執行模組狀態檢測..."
+        python .github/scripts/check_module_status.py
     
-    - name: Generate dashboard
+    - name: Commit status updates
       run: |
-        echo "生成可視化儀表板..."
-        echo "儀表板直接使用 TOC Modules.md 作為數據源"
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add TOC\ Modules.md module_status_report.md
+        git diff --staged --quiet || git commit -m "🤖 自動更新: 模組狀態追蹤 [skip ci]"
+        git push || echo "No changes to push"
     
-    - name: Upload dashboard artifacts
+    - name: Upload status report
       uses: actions/upload-artifact@v4
       with:
-        name: mpm-dashboard
-        path: docs/dashboard/
+        name: module-status-report
+        path: module_status_report.md
+        retention-days: 30
+  
+  deploy-tracking-platform:
+    name: 部署追蹤平台
+    runs-on: ubuntu-latest
+    needs: check-module-status
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.ref }}
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install matplotlib seaborn plotly
+    
+    - name: Verify tracking platform
+      run: |
+        echo "驗證追蹤平台..."
+        if [ -d "docs/tracking-platform" ]; then
+          echo "✅ 統一追蹤平台已就緒"
+        else
+          echo "❌ 找不到追蹤平台"
+          exit 1
+        fi
+    
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs
+        keep_files: false
+    
+    - name: Upload tracking platform artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: tracking-platform
+        path: docs/
         retention-days: 30 

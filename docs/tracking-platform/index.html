@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>菜蟲農食 ERP - 統一追蹤平台</title>
+    
+    <!-- CSS Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    
+    <!-- Custom CSS -->
+    <link href="css/main.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- 載入動畫 -->
+    <div id="app-loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+        <div class="text-center">
+            <div class="inline-flex rounded-full h-12 w-12 border-4 border-t-blue-500 border-r-blue-500 border-b-gray-300 border-l-gray-300 animate-spin"></div>
+            <p class="mt-4 text-gray-600">載入中...</p>
+        </div>
+    </div>
+
+    <!-- 主應用容器 -->
+    <div id="app" class="hidden">
+        <!-- 頂部導航欄 -->
+        <nav class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-chart-line text-2xl"></i>
+                        <h1 class="text-xl font-bold">菜蟲農食 ERP 系統</h1>
+                        <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">統一追蹤平台</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <!-- 最後更新時間 -->
+                        <span class="text-sm opacity-75">
+                            最後更新: <span id="last-updated">-</span>
+                        </span>
+                        
+                        <!-- 功能按鈕 -->
+                        <div class="flex items-center space-x-2">
+                            <button id="collab-btn" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-all" title="團隊協作 (Ctrl+Shift+M)">
+                                <i class="fas fa-users"></i>
+                            </button>
+                            <button id="sync-btn" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-all" title="同步資料">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button id="settings-btn" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-all" title="設定">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <button id="help-btn" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-all" title="使用說明">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 主要導航標籤 -->
+                <div class="border-t border-white border-opacity-20">
+                    <nav class="flex space-x-8" aria-label="Tabs">
+                        <button data-tab="overview" class="tab-btn text-white border-b-2 border-white py-2 px-1 text-sm font-medium">
+                            <i class="fas fa-home mr-2"></i>總覽
+                        </button>
+                        <button data-tab="dashboard" class="tab-btn text-white text-opacity-75 hover:text-opacity-100 py-2 px-1 text-sm font-medium">
+                            <i class="fas fa-tachometer-alt mr-2"></i>即時監控
+                        </button>
+                        <button data-tab="analytics" class="tab-btn text-white text-opacity-75 hover:text-opacity-100 py-2 px-1 text-sm font-medium">
+                            <i class="fas fa-chart-bar mr-2"></i>進度分析
+                        </button>
+                        <button data-tab="risk" class="tab-btn text-white text-opacity-75 hover:text-opacity-100 py-2 px-1 text-sm font-medium">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>風險管理
+                        </button>
+                        <button data-tab="tools" class="tab-btn text-white text-opacity-75 hover:text-opacity-100 py-2 px-1 text-sm font-medium">
+                            <i class="fas fa-tools mr-2"></i>工具箱
+                        </button>
+                    </nav>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主要內容區域 -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- 總覽頁面 -->
+            <div id="overview-tab" class="tab-content">
+                <!-- 關鍵指標卡片 -->
+                <div id="overview-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- 卡片將由 JavaScript 動態生成 -->
+                </div>
+                
+                <!-- 9維度狀態概覽 -->
+                <div id="dimensions-overview" class="bg-white rounded-xl shadow-md p-6 mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">專案狀態維度</h3>
+                    <div id="dimensions-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- 維度卡片將由 JavaScript 動態生成 -->
+                    </div>
+                </div>
+                
+                <!-- 快速操作 -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">快速操作</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button class="quick-action-btn bg-blue-50 hover:bg-blue-100 text-blue-700 p-4 rounded-lg transition-all">
+                            <i class="fas fa-file-export text-2xl mb-2"></i>
+                            <p class="text-sm">匯出報表</p>
+                        </button>
+                        <button class="quick-action-btn bg-green-50 hover:bg-green-100 text-green-700 p-4 rounded-lg transition-all">
+                            <i class="fas fa-sync text-2xl mb-2"></i>
+                            <p class="text-sm">執行同步</p>
+                        </button>
+                        <button class="quick-action-btn bg-purple-50 hover:bg-purple-100 text-purple-700 p-4 rounded-lg transition-all">
+                            <i class="fas fa-chart-line text-2xl mb-2"></i>
+                            <p class="text-sm">查看趨勢</p>
+                        </button>
+                        <button class="quick-action-btn bg-orange-50 hover:bg-orange-100 text-orange-700 p-4 rounded-lg transition-all">
+                            <i class="fas fa-bell text-2xl mb-2"></i>
+                            <p class="text-sm">通知設定</p>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 即時監控頁面 -->
+            <div id="dashboard-tab" class="tab-content hidden">
+                <!-- 模組進度表格 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-gray-900">模組進度詳情</h3>
+                        <div class="flex space-x-2">
+                            <input type="text" id="module-search" placeholder="搜尋模組..." 
+                                   class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <select id="status-filter" class="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">所有狀態</option>
+                                <option value="completed">已完成</option>
+                                <option value="in-progress">進行中</option>
+                                <option value="not-started">未開始</option>
+                                <option value="planning">規劃中</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">模組</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">進度</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="module-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- 表格內容將由 JavaScript 動態生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 進度分析頁面 -->
+            <div id="analytics-tab" class="tab-content hidden">
+                <!-- 熱力圖 -->
+                <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">模組狀態熱力圖</h3>
+                    <div id="heatmap-container" class="overflow-x-auto">
+                        <!-- 熱力圖將由 JavaScript 動態生成 -->
+                    </div>
+                </div>
+                
+                <!-- 圖表區域 -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">模組進度比較</h3>
+                        <canvas id="module-progress-chart"></canvas>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">維度完成率</h3>
+                        <canvas id="dimension-radar-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 風險管理頁面 -->
+            <div id="risk-tab" class="tab-content hidden">
+                <!-- 風險概覽 -->
+                <div id="risk-overview" class="mb-8">
+                    <!-- 風險統計卡片將由 JavaScript 動態生成 -->
+                </div>
+                
+                <!-- 風險矩陣和列表 -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <!-- 風險矩陣 -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                            <i class="fas fa-th text-blue-500 mr-2"></i>風險矩陣
+                        </h3>
+                        <div id="risk-matrix-container" class="relative h-96">
+                            <canvas id="risk-matrix-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- 風險列表 -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                            <i class="fas fa-list text-orange-500 mr-2"></i>風險詳情
+                        </h3>
+                        <div id="risk-list" class="overflow-y-auto max-h-96">
+                            <!-- 風險列表將由 JavaScript 動態生成 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 行動項目 -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-tasks text-green-500 mr-2"></i>建議行動項目
+                        </h3>
+                        <button onclick="window.trackingApp.views.risk.exportRiskReport()" 
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all">
+                            <i class="fas fa-download mr-2"></i>匯出風險報告
+                        </button>
+                    </div>
+                    <div id="action-items">
+                        <!-- 行動項目將由 JavaScript 動態生成 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具箱頁面 -->
+            <div id="tools-tab" class="tab-content hidden">
+                <!-- 工具區域 -->
+                <div id="tools-section" class="mb-8">
+                    <!-- 工具卡片將由 JavaScript 動態生成 -->
+                </div>
+                
+                <!-- 快速連結 -->
+                <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-link text-blue-500 mr-2"></i>快速連結
+                    </h3>
+                    <div id="quick-links-section">
+                        <!-- 快速連結將由 JavaScript 動態生成 -->
+                    </div>
+                </div>
+                
+                <!-- 使用指南 -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-book text-blue-500 mr-2"></i>使用指南
+                    </h3>
+                    <div class="prose prose-sm max-w-none">
+                        <h4 class="text-base font-semibold mt-4 mb-2">系統概述</h4>
+                        <p>本追蹤系統提供了完整的專案生命週期管理功能，包含 9 個追蹤維度：</p>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>舊系統運行狀態</li>
+                            <li>新系統更新進度</li>
+                            <li>PRD 文件完成度</li>
+                            <li>系統整合狀態</li>
+                            <li>單元測試覆蓋</li>
+                            <li>整合測試完成</li>
+                            <li>錯誤追蹤管理</li>
+                            <li>上線部署進度</li>
+                            <li>TOC可視化回報</li>
+                        </ol>
+                        
+                        <h4 class="text-base font-semibold mt-6 mb-2">快速操作</h4>
+                        <ul class="list-disc list-inside space-y-2">
+                            <li><strong>自動同步</strong>：使用 <code class="bg-gray-100 px-1 py-0.5 rounded">./enhanced_auto_sync.sh</code> 執行完整狀態更新</li>
+                            <li><strong>手動檢測</strong>：執行 <code class="bg-gray-100 px-1 py-0.5 rounded">python .github/scripts/check_module_status.py</code></li>
+                            <li><strong>查看報表</strong>：訪問 Dashboard 或匯出 CSV/PDF 報表</li>
+                            <li><strong>更新狀態</strong>：編輯 TOC Modules.md 中的狀態表格</li>
+                        </ul>
+                        
+                        <h4 class="text-base font-semibold mt-6 mb-2">狀態符號說明</h4>
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <div><span class="text-lg">✅</span> 完成</div>
+                            <div><span class="text-lg">🟡</span> 開發中/進行中</div>
+                            <div><span class="text-lg">🔴</span> 未開始</div>
+                            <div><span class="text-lg">⚪</span> 規劃中</div>
+                        </div>
+                        
+                        <h4 class="text-base font-semibold mt-6 mb-2">最佳實踐</h4>
+                        <ul class="list-disc list-inside space-y-2">
+                            <li>定期執行同步（建議每日或每週）</li>
+                            <li>即時更新重要變更（PRD完成、模組上線等）</li>
+                            <li>使用 GitHub Issues 追蹤問題</li>
+                            <li>每月生成進度報表進行評估</li>
+                        </ul>
+                        
+                        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                            <p class="text-sm text-blue-700">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                完整使用指南請參考 <a href="../../TRACKING_GUIDE.md" target="_blank" class="underline">TRACKING_GUIDE.md</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 模態框容器 -->
+    <div id="modal-container"></div>
+
+    <!-- 通知容器 -->
+    <div id="notification-container" class="fixed top-4 right-4 z-50"></div>
+
+    <!-- JavaScript -->
+    <script src="js/core/app.js" type="module"></script>
+    <script src="js/modules/feedback.js" type="module"></script>
+</body>
+</html>

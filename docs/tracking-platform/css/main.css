@@ -1,0 +1,333 @@
+/* 菜蟲農食 ERP 統一追蹤平台 - 主要樣式 */
+
+/* 基礎樣式 */
+:root {
+    --primary-color: #3B82F6;
+    --secondary-color: #8B5CF6;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
+    --info-color: #3B82F6;
+    --gray-50: #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --gray-800: #1F2937;
+    --gray-900: #111827;
+}
+
+/* 動畫 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* 載入動畫 */
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* 卡片效果 */
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Tab 導航 */
+.tab-btn {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    border-bottom-color: white !important;
+}
+
+.tab-btn:not(.active):hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 進度環 */
+.progress-ring {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-circle {
+    transition: stroke-dashoffset 0.35s;
+    transform-origin: 50% 50%;
+}
+
+/* 狀態顏色 */
+.status-completed { color: var(--success-color); }
+.status-in-progress { color: var(--warning-color); }
+.status-planning { color: var(--info-color); }
+.status-not-started { color: var(--danger-color); }
+
+.bg-status-completed { background-color: var(--success-color); }
+.bg-status-in-progress { background-color: var(--warning-color); }
+.bg-status-planning { background-color: var(--gray-300); }
+.bg-status-not-started { background-color: var(--danger-color); }
+
+/* 熱力圖單元格 */
+.heatmap-cell {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.heatmap-cell:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+/* 快速操作按鈕 */
+.quick-action-btn {
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* 表格樣式 */
+.table-hover-row:hover {
+    background-color: var(--gray-50);
+}
+
+/* 通知樣式 */
+.notification {
+    animation: fadeIn 0.3s ease;
+}
+
+.notification-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.notification-error {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.notification-warning {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.notification-info {
+    background-color: var(--info-color);
+    color: white;
+}
+
+/* 模態框 */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+    animation: slideIn 0.3s ease;
+}
+
+/* 自訂捲軸 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--gray-400);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-500);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .tab-btn {
+        font-size: 0.875rem;
+        padding: 0.5rem;
+    }
+    
+    .tab-btn i {
+        display: none;
+    }
+}
+
+/* 列印樣式 */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-break-page {
+        page-break-after: always;
+    }
+    
+    body {
+        background: white;
+    }
+    
+    .bg-gradient-to-r {
+        background: var(--primary-color) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+/* 工具提示 */
+.tooltip {
+    position: relative;
+}
+
+.tooltip .tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: var(--gray-800);
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 10px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 0.875rem;
+}
+
+.tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* 圖表容器 */
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+/* 風險等級顏色 */
+.risk-high {
+    border-left: 4px solid var(--danger-color);
+}
+
+.risk-medium {
+    border-left: 4px solid var(--warning-color);
+}
+
+.risk-low {
+    border-left: 4px solid var(--success-color);
+}
+
+/* 暗色主題支援 */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-primary: var(--gray-900);
+        --bg-secondary: var(--gray-800);
+        --text-primary: var(--gray-100);
+        --text-secondary: var(--gray-300);
+    }
+}
+
+/* 無障礙增強 */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* 焦點樣式 */
+*:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+button:focus,
+a:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* 過渡效果 */
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.transition-opacity {
+    transition: opacity 0.3s ease;
+}
+
+.transition-transform {
+    transition: transform 0.3s ease;
+}
+
+/* 反饋系統樣式 */
+#feedback-button {
+    animation: pulse 2s infinite;
+}
+
+#feedback-button:hover {
+    animation: none;
+    transform: scale(1.1);
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
+.feedback-type-option input[type="radio"] {
+    display: none;
+}
+
+.feedback-type-option input[type="radio"]:checked + div {
+    background-color: #EBF8FF;
+    border-color: #3182CE;
+}
