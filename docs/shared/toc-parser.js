@@ -149,6 +149,11 @@ export class TOCParser {
                                 description: description
                             };
                         }
+                        
+                        // 解析PRD功能進度
+                        if (dimension === 'PRD功能進度') {
+                            moduleData.prdDetails = this.parsePRDDetails(status, description);
+                        }
                     }
                 }
             });
@@ -175,6 +180,37 @@ export class TOCParser {
     }
     
     /**
+     * 解析PRD詳細資訊
+     */
+    parsePRDDetails(status, description) {
+        const details = {
+            percentage: status,
+            frCount: 0,
+            developing: 0,
+            notStarted: 0,
+            planning: 0,
+            version: null
+        };
+        
+        // 解析FR統計 (例如: "11個FR: 2開發中/4未開始/5規劃中")
+        const frMatch = description.match(/(\d+)個FR[:：]\s*(\d+)開發中\/(\d+)未開始\/(\d+)規劃中/);
+        if (frMatch) {
+            details.frCount = parseInt(frMatch[1]);
+            details.developing = parseInt(frMatch[2]);
+            details.notStarted = parseInt(frMatch[3]);
+            details.planning = parseInt(frMatch[4]);
+        }
+        
+        // 解析版本號
+        const versionMatch = description.match(/v([\d.]+)/);
+        if (versionMatch) {
+            details.version = versionMatch[1];
+        }
+        
+        return details;
+    }
+    
+    /**
      * 獲取維度鍵
      */
     getDimensionKey(dimensionName) {
@@ -182,6 +218,7 @@ export class TOCParser {
             '舊系統狀態': 'oldSystem',
             '新系統更新': 'newSystem',
             'PRD完成度': 'prd',
+            'PRD功能進度': 'prdProgress',
             '系統整合': 'integration',
             '單元測試': 'unitTest',
             '整合測試': 'integrationTest',
