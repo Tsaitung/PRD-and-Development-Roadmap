@@ -184,6 +184,69 @@ export class DashboardView {
                     </div>
                 </div>
                 
+                <!-- PRD詳細資訊 (如果有) -->
+                ${module.prdDetails ? `
+                    <div>
+                        <h5 class="font-medium text-gray-700 mb-3">PRD 功能需求進度</h5>
+                        <div class="bg-gray-50 p-4 rounded space-y-3">
+                            ${module.prdDetails.version ? `
+                                <div class="text-sm text-gray-600">
+                                    版本: <span class="font-medium">v${module.prdDetails.version}</span>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="text-sm">
+                                <span class="text-gray-600">總計 </span>
+                                <span class="font-bold text-gray-900">${module.prdDetails.frCount}</span>
+                                <span class="text-gray-600"> 個功能需求 (FR)</span>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                ${module.prdDetails.developing > 0 ? `
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <span class="text-lg mr-2">🟡</span>
+                                            <span class="text-sm text-gray-700">開發中</span>
+                                        </div>
+                                        <span class="font-medium">${module.prdDetails.developing} 個</span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${module.prdDetails.notStarted > 0 ? `
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <span class="text-lg mr-2">🔴</span>
+                                            <span class="text-sm text-gray-700">未開始</span>
+                                        </div>
+                                        <span class="font-medium">${module.prdDetails.notStarted} 個</span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${module.prdDetails.planning > 0 ? `
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <span class="text-lg mr-2">⚪</span>
+                                            <span class="text-sm text-gray-700">規劃中</span>
+                                        </div>
+                                        <span class="font-medium">${module.prdDetails.planning} 個</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="pt-3 border-t">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-600">PRD功能進度</span>
+                                    <span class="text-lg font-bold text-blue-600">${module.prdDetails.percentage}</span>
+                                </div>
+                                <div class="mt-2 bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" 
+                                         style="width: ${module.prdDetails.percentage}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+                
                 <!-- 子模組資訊 -->
                 <div>
                     <h5 class="font-medium text-gray-700 mb-2">子模組資訊</h5>
