@@ -37,6 +37,12 @@ export class DashboardView {
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">${module.zhName}</div>
                                 <div class="text-xs text-gray-500">${module.name}</div>
+                                ${module.submoduleStats ? `
+                                    <div class="text-xs text-blue-600 mt-1">
+                                        子模組: ${module.submoduleStats.text}
+                                        ${module.migrationStatus ? `| ${module.migrationStatus.status}` : ''}
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                     </td>
@@ -181,10 +187,47 @@ export class DashboardView {
                 <!-- 子模組資訊 -->
                 <div>
                     <h5 class="font-medium text-gray-700 mb-2">子模組資訊</h5>
-                    <div class="bg-gray-50 p-3 rounded">
-                        <p class="text-sm text-gray-600">
-                            共 <span class="font-medium">${module.submoduleCount}</span> 個子模組
-                        </p>
+                    <div class="bg-gray-50 p-3 rounded space-y-3">
+                        ${module.submoduleStats ? `
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">進度統計：</span>
+                                <span class="font-medium">${module.submoduleStats.text}</span>
+                            </div>
+                            <p class="text-xs text-gray-500">${module.submoduleStats.description}</p>
+                        ` : ''}
+                        
+                        ${module.migrationStatus ? `
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">舊系統轉移：</span>
+                                <span class="text-lg">${module.migrationStatus.status} ${module.migrationStatus.description}</span>
+                            </div>
+                        ` : ''}
+                        
+                        ${module.submodules && module.submodules.length > 0 ? `
+                            <div class="mt-3 pt-3 border-t">
+                                <div class="text-sm font-medium text-gray-700 mb-2">子模組列表：</div>
+                                <div class="space-y-1 max-h-48 overflow-y-auto">
+                                    ${module.submodules.map(sub => `
+                                        <div class="flex items-center justify-between p-2 bg-white rounded hover:bg-gray-50">
+                                            <div class="flex items-center flex-1">
+                                                <span class="text-lg mr-2">${sub.status}</span>
+                                                <div>
+                                                    <span class="text-xs font-medium text-gray-700">${sub.code}</span>
+                                                    <p class="text-xs text-gray-500">${sub.name}</p>
+                                                </div>
+                                            </div>
+                                            ${sub.path ? `
+                                                <span class="text-xs text-gray-400 ml-2">${sub.path}</span>
+                                            ` : ''}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : `
+                            <p class="text-sm text-gray-600">
+                                共 <span class="font-medium">${module.submoduleCount || 0}</span> 個子模組
+                            </p>
+                        `}
                     </div>
                 </div>
                 
