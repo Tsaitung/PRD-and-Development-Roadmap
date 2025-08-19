@@ -70,12 +70,38 @@ export class TOCParser {
             zhName: moduleDef.zhName,
             submodules: [],
             submoduleCount: 0,
+            submoduleStats: null,
+            migrationStatus: null,
             status: {},
             progress: 0
         };
         
+        // 解析子模組詳細資訊
+        const submoduleRegex = new RegExp(`\\d+\\.\\d+\\.\\s*\\[${moduleDef.code}-([A-Z-]+)\\]\\s*([^\\(\\n]+)(?:\\(([^\\)]+)\\))?`, 'g');
+        let submoduleMatch;
+        while ((submoduleMatch = submoduleRegex.exec(content)) !== null) {
+            const submoduleData = {
+                code: `${moduleDef.code}-${submoduleMatch[1]}`,
+                shortCode: submoduleMatch[1],
+                name: submoduleMatch[2].trim(),
+                path: submoduleMatch[3] || null,
+                status: '🔴' // 預設為未開始
+            };
+            
+            // 根據路徑判斷子模組狀態
+            if (submoduleData.path) {
+                if (submoduleData.path.includes('.tsx') || submoduleData.path.includes('.ts')) {
+                    submoduleData.status = '🟡'; // 有程式碼檔案，開發中
+                }
+            }
+            
+            moduleData.submodules.push(submoduleData);
+        }
+        
+        moduleData.submoduleCount = moduleData.submodules.length;
+        
         // 尋找模組狀態表格
-        const regex = new RegExp(`#### 📊 ${moduleDef.code} 模組狀態追蹤[\\s\\S]*?(?=####|$)`, 'g');
+        const regex = new RegExp(`#### 📊 ${moduleDef.code} 模組狀態追蹤[\\s\\S]*?(?=####|###|$)`, 'g');
         const match = content.match(regex);
         
         if (match && match[0]) {
@@ -107,6 +133,22 @@ export class TOCParser {
                                 }
                             }
                         }
+                        
+                        // 解析子模組統計
+                        if (dimension === '子模組統計') {
+                            moduleData.submoduleStats = {
+                                text: status,
+                                description: description
+                            };
+                        }
+                        
+                        // 解析舊系統轉移狀態
+                        if (dimension === '舊系統轉移') {
+                            moduleData.migrationStatus = {
+                                status: status,
+                                description: description
+                            };
+                        }
                     }
                 }
             });
@@ -116,10 +158,18 @@ export class TOCParser {
             moduleData.progress = DEFAULT_MODULE_STATUS[moduleDef.code]?.progress || 0;
         }
         
-        // 計算子模組數量
-        const submoduleRegex = new RegExp(`\\\\d+\\\\.\\\\d+\\\\.\\\\s*\\\\[${moduleDef.code}-[A-Z-]+\\\\]`, 'g');
-        const submoduleMatches = content.match(submoduleRegex);
-        moduleData.submoduleCount = submoduleMatches ? submoduleMatches.length : 0;
+        // 計算子模組統計
+        if (moduleData.submodules.length > 0) {
+            const completedCount = moduleData.submodules.filter(s => s.status === '✅').length;
+            const inProgressCount = moduleData.submodules.filter(s => s.status === '🟡').length;
+            
+            if (!moduleData.submoduleStats) {
+                moduleData.submoduleStats = {
+                    text: `${completedCount + inProgressCount}/${moduleData.submoduleCount}`,
+                    description: `${completedCount}完成, ${inProgressCount}開發中, ${moduleData.submoduleCount - completedCount - inProgressCount}未開始`
+                };
+            }
+        }
         
         return moduleData;
     }

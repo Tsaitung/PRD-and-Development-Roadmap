@@ -26,6 +26,16 @@ export class OverviewView {
         const cardsContainer = document.getElementById('overview-cards');
         if (!cardsContainer) return;
         
+        // 計算子模組統計
+        let totalSubmodulesCompleted = 0;
+        let totalSubmodulesInProgress = 0;
+        data.modules.forEach(module => {
+            if (module.submodules && module.submodules.length > 0) {
+                totalSubmodulesCompleted += module.submodules.filter(s => s.status === '✅').length;
+                totalSubmodulesInProgress += module.submodules.filter(s => s.status === '🟡').length;
+            }
+        });
+        
         const cards = [
             {
                 title: '整體進度',
@@ -40,7 +50,7 @@ export class OverviewView {
                 value: data.totalModules,
                 icon: 'fa-cubes',
                 color: 'purple',
-                subtitle: `${data.totalSubmodules} 個子模組`
+                subtitle: `${data.totalSubmodules} 個子模組 (${totalSubmodulesInProgress}開發中/${totalSubmodulesCompleted}完成)`
             },
             {
                 title: '已完成',
