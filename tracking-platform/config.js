@@ -30,6 +30,17 @@ export const config = {
         ? `${getBasePath()}/TOC%20Modules.md` 
         : '../../TOC%20Modules.md',
     
+    // GitHub Raw Content URL
+    githubRawUrl: 'https://raw.githubusercontent.com/tsaitung/PRD-and-Development-Roadmap/main/TOC%20Modules.md',
+    
+    // GitHub Repository 設定
+    github: {
+        owner: 'tsaitung',
+        repo: 'PRD-and-Development-Roadmap',
+        branch: 'main',
+        tocFile: 'TOC Modules.md'
+    },
+    
     // API 端點（未來使用）
     apiEndpoint: null,
     
@@ -41,7 +52,8 @@ export const config = {
         analytics: true,
         riskManagement: true,
         collaboration: false, // 未來功能
-        historyTracking: false // 未來功能
+        historyTracking: false, // 未來功能
+        useGitHubRaw: true // 使用 GitHub Raw URL
     }
 };
 

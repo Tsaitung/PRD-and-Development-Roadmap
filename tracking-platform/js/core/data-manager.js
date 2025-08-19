@@ -32,13 +32,20 @@ export class TrackingDataManager {
         }
         
         try {
-            // 載入 TOC Modules.md
-            const response = await fetch(config.tocModulesPath);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            let content;
+            
+            // 如果是 GitHub Pages 環境，使用 GitHub raw URL
+            if (config.environment === 'production') {
+                content = await this.fetchFromGitHub();
+            } else {
+                // 本地開發環境，使用相對路徑
+                const response = await fetch(config.tocModulesPath);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                content = await response.text();
             }
             
-            const content = await response.text();
             this.data = this.parser.parseTOCContent(content);
             this.lastFetch = Date.now();
             
@@ -56,6 +63,46 @@ export class TrackingDataManager {
             
             return this.data;
         }
+    }
+    
+    /**
+     * 從 GitHub 獲取 TOC Modules.md
+     */
+    async fetchFromGitHub() {
+        const maxRetries = 3;
+        let lastError;
+        
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                // 使用 GitHub raw content URL
+                const rawUrl = config.githubRawUrl || 'https://raw.githubusercontent.com/tsaitung/PRD-and-Development-Roadmap/main/TOC%20Modules.md';
+                
+                console.log(`嘗試從 GitHub 載入 (${i + 1}/${maxRetries}):`, rawUrl);
+                
+                const response = await fetch(rawUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`GitHub fetch failed: ${response.status}`);
+                }
+                
+                const content = await response.text();
+                console.log('成功從 GitHub 載入 TOC Modules.md');
+                
+                return content;
+                
+            } catch (error) {
+                lastError = error;
+                console.warn(`GitHub 載入失敗 (嘗試 ${i + 1}):`, error);
+                
+                // 如果不是最後一次嘗試，等待後重試
+                if (i < maxRetries - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                }
+            }
+        }
+        
+        // 所有嘗試都失敗，拋出錯誤
+        throw lastError;
     }
     
     /**
