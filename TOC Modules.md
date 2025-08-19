@@ -112,12 +112,12 @@
 |------|------|------|
 | 舊系統狀態 | 🔴 | 無舊系統（全新模組） |
 | 新系統更新 | 🟡 | 開發中 |
-| PRD完成度 | 🟡 | BDM-UNIT PRD 已完成 |
+| PRD完成度 | ✅ | BDM-UNIT PRD 已完成 |
 | 系統整合 | 🟡 | unit.tsx 已整合 |
 | 單元測試 | 🔴 | 未開始 |
 | 整合測試 | 🔴 | 未開始 |
 | 錯誤追蹤 | - | 無相關 issues |
-| 上線進度 | 35% | 基礎字典架構設計中 |
+| 上線進度 | 45% | 基礎字典架構設計中 |
 ### 4. [IM] Item Management 品項管理
     4.1. [IM-IM] Item Master 品項主檔（含：可採購/可販售屬性）
     4.2. [IM-BCRS] BOM / Conversion Relationship Setting BOM / 轉換關聯設定（例：蒜末1KG ← 多來源原料0.9KG…）
