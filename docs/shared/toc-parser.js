@@ -216,6 +216,7 @@ export class TOCParser {
     getDimensionKey(dimensionName) {
         const mapping = {
             '舊系統狀態': 'oldSystem',
+            '轉移進度': 'migrationProgress',
             '新系統更新': 'newSystem',
             'PRD完成度': 'prd',
             'PRD功能進度': 'prdProgress',

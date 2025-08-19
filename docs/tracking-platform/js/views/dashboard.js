@@ -259,10 +259,29 @@ export class DashboardView {
                             <p class="text-xs text-gray-500">${module.submoduleStats.description}</p>
                         ` : ''}
                         
-                        ${module.migrationStatus ? `
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-600">舊系統轉移：</span>
-                                <span class="text-lg">${module.migrationStatus.status} ${module.migrationStatus.description}</span>
+                        ${module.status.migrationProgress ? `
+                            <div class="mt-3 pt-3 border-t">
+                                <div class="text-sm font-medium text-gray-700 mb-2">轉移狀態</div>
+                                <div class="flex items-center justify-between bg-white p-2 rounded">
+                                    <div>
+                                        <span class="text-sm text-gray-600">舊系統：</span>
+                                        <span class="font-medium">${module.status.oldSystem?.status || '❓'} ${module.status.oldSystem?.description || ''}</span>
+                                    </div>
+                                    ${module.status.migrationProgress?.status !== '-' ? `
+                                        <div>
+                                            <span class="text-sm text-gray-600">轉移進度：</span>
+                                            <span class="text-lg font-medium">${module.status.migrationProgress.status} ${module.status.migrationProgress.description || ''}</span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                ${module.status.migrationProgress?.status?.includes('🔄') ? `
+                                    <div class="mt-2">
+                                        <div class="bg-gray-200 rounded-full h-2">
+                                            <div class="bg-green-500 h-2 rounded-full transition-all duration-500" 
+                                                 style="width: ${this.parseMigrationPercentage(module.status.migrationProgress.status)}%"></div>
+                                        </div>
+                                    </div>
+                                ` : ''}
                             </div>
                         ` : ''}
                         
@@ -385,5 +404,10 @@ export class DashboardView {
     
     getModule(moduleCode) {
         return this.filteredModules.find(m => m.code === moduleCode);
+    }
+    
+    parseMigrationPercentage(status) {
+        const match = status.match(/(\d+)%/);
+        return match ? parseInt(match[1]) : 0;
     }
 }
