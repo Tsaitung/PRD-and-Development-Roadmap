@@ -3,9 +3,9 @@
 ## 模組資訊
 - **模組代碼**: 13.5-SA-OBM
 - **模組名稱**: Organization & Branch Management（組織與分支管理）
-- **負責人**: 菜蟲農食 ERP 團隊
-- **最後更新**: 2025-08-18
-- **版本**: v1.0.0
+- **負責人**: 待定
+- **最後更新**: 2025-08-19
+- **版本**: v1.1.0
 
 ## 命名與狀態
 - FR 命名: `FR-[主模組]-[子模組]-[序號]`（例：`FR-SA-OBM-001`）
@@ -13,18 +13,21 @@
   - `🔴 未開始`｜`🟡 開發中`｜`✅ 完成`｜`⚪ 規劃中`
 
 ## 模組概述
-組織與分支管理模組提供菜蟲農食 ERP 系統對公司內部組織結構的設定與維護功能。此模組允許系統管理員建立並管理「總部－分區－分公司－部門」的階層關係，以及將使用者（員工）關聯至適當的部門。透過該模組，我們可以清晰定義公司的組織架構，包括總公司、各營運分區（北區、中區、南區等）、各區域下的分公司據點，以及分公司內部的部門單位，並將人員隸屬關係納入系統中，以支援日後權限控管與資料分區查看等需求。
+管理公司組織結構（總部/HQ、營運分區、分公司據點、部門）與人員隸屬，並支援「外部加盟分區」的合約/費率設定、資料同步策略、合約到期自動處理與獨立報表權限。OBM 提供配置與主檔；結算入帳委由 FA，報表權限由 BI 執行；權限與租戶隔離由 SA-UPM 配合。此模組允許系統管理員建立並管理「總部－分區－分公司－部門」的階層關係，以及將使用者（員工）關聯至適當的部門，支援日後權限控管與資料分區查看等需求。
 
 ## 業務價值
-- **組織清晰化**：模組使管理者能定義公司內的階層架構（總部/分公司/部門），確保組織單位與人員歸屬清晰明確，避免資訊混淆
-- **權限控管基礎**：透過將使用者綁定至部門與分公司，此模組為權限與資料範圍控管奠定基礎，使不同分公司或部門的人員只能存取相關資料，提高資料安全
-- **營運效率提升**：區分北、中、南等營運分區及其下分公司有助於區域營運管理，各區域經理可聚焦管理所屬分區/分公司業務，提升決策和協作效率
-- **靈活擴展**：統一的組織單位模型讓系統更易於在公司擴編時增設新分公司或部門，確保 ERP 系統能隨業務擴展迅速調整組織配置
+- **以組織為軸的單一真相來源（SSOT）**：降低跨系統配置分散與錯配風險
+- **與權限、財務、報表串接**：實現分區/加盟商級別的資料隔離與治理
+- **支援加盟模式**：自動結算、到期控管、資料同步，降低營運成本與財務風險
+- **組織清晰化**：模組使管理者能定義公司內的階層架構（總部/分公司/部門），確保組織單位與人員歸屬清晰明確
+- **權限控管基礎**：透過將使用者綁定至部門與分公司，此模組為權限與資料範圍控管奠定基礎
+- **營運效率提升**：區分營運分區及其下分公司有助於區域營運管理，提升決策和協作效率
+- **靈活擴展**：統一的組織單位模型讓系統更易於在公司擴編時增設新分公司或部門
 
 ## 功能需求
 
 ### FR-SA-OBM-001: 分公司（含總部）資料維護
-**狀態**: 🔴 未開始  
+**狀態**: 🟡 開發中  
 **優先級**: P0
 
 **功能描述**:
@@ -77,8 +80,8 @@
 
 ---
 
-### FR-SA-OBM-002: 營運分區設定與管理
-**狀態**: 🔴 未開始  
+### FR-SA-OBM-002: 營運分區設定與管理（含外部分區旗標）
+**狀態**: 🟡 開發中  
 **優先級**: P1
 
 **功能描述**:
@@ -365,6 +368,287 @@
 - **Tests**: `tests/unit/FR-SA-OBM-006.test.py`
 - **Code**: `src/modules/system-admin/organization/**`
 - **TOC**: `TOC Modules.md` [13.5-SA-OBM]
+
+---
+
+### FR-SA-OBM-007: 加盟合約主檔與費率/權利金設定（配置）
+**狀態**: 🔴 未開始  
+**優先級**: P0
+
+**功能描述**:
+針對 is_external 分區，建立「加盟合約」主檔：起迄日、幣別、結算週期(月/季)、費率/權利金規則、最低保證、稅率/發票資訊、入帳科目映射（交由 FA 使用），以及銀行收付資料。
+
+**功能需求細節**:
+- **條件/觸發**: 分區 is_external=true
+- **行為**: 建立/編輯/版本化合約；禁止覆蓋重疊期間
+- **資料輸入**: 
+  - region_id
+  - period: start_date, end_date, grace_days
+  - currency, tax_profile, invoice_profile
+  - fee_rules: platform_fee (PERCENT|FLAT|TIERED), royalty, per_order_fee, min_guarantee
+  - settlement_cycle: MONTHLY|QUARTERLY, cutoff_day
+  - fa_mapping: ar_account, ap_account, revenue_account, fee_account, tax_account
+  - bank_info_ref
+- **資料輸出**: 合約記錄（版本號、狀態）
+- **UI反應**: 合約表單（包含規則預覽/試算）、版本列表與比較
+- **例外處理**: 
+  - 與既有有效期間重疊 → 拒絕
+  - 缺少關鍵欄位（幣別/科目/稅）→ 拒絕
+  - 幣別與區域政策不符 → 警示
+
+**用戶故事**:
+作為 HQ，我要為外部分區設定合約與費率，供自動結算使用。
+
+**驗收標準**:
+```yaml
+- 條件: 期間不重疊、欄位完整
+  預期結果: 合約建立成功且版本=1
+
+- 條件: 編輯生效中合約
+  預期結果: 產生新版本，舊版本保留
+
+- 條件: 缺少稅/科目映射
+  預期結果: 拒絕並提示必填
+```
+
+**技術需求**:
+- **API 端點**: 
+  - `GET /api/v1/partners/{regionId}/contracts`
+  - `POST /api/v1/partners/{regionId}/contracts`
+- **數據模型**: PartnerContract
+- **權限要求**: 需要 system.admin 權限
+
+**追蹤資訊**:
+- **Tests**: `tests/unit/FR-SA-OBM-007.test.py`
+- **Code**: `src/modules/system-admin/organization/contracts/**`
+- **TOC**: `TOC Modules.md` [13.5-SA-OBM]
+
+**依賴關係**:
+- **依賴模組**: 11-FA (財務會計)
+- **依賴功能**: 科目映射、稅務設定
+- **外部服務**: 無
+
+---
+
+### FR-SA-OBM-008: 自動結算機制（手續費/權利金）與入帳交付
+**狀態**: 🔴 未開始  
+**優先級**: P0
+
+**功能描述**:
+依合約規則按週期自動計算加盟分區應收/應付：平台費、權利金、每筆手續費、最低保證補差，生成「結算單」與明細，並交付 FA 建立 AR/AP/Revenue 等分錄（OBM 不直接記帳）。
+
+**功能需求細節**:
+- **條件/觸發**: 預排批次(排程)或手動觸發；僅對 is_external 分區
+- **行為**: 
+  - 期間交易彙總（訂單、退貨、折讓、稅），按合約規則計算
+  - 生成結算單(Statement) DRAFT → REVIEW → POSTED
+  - POSTED 後鎖定，吐出給 FA 的憑證/接口檔
+- **資料輸入**: 
+  - period: from_date, to_date
+  - region_ids（選填）
+  - rerun_policy: REBUILD|ADJUST
+- **資料輸出**: 
+  - settlement_statement: header + lines + totals
+  - export_for_FA: journal_payload 或中介檔
+- **UI反應**: 結算面板（期間、狀態、差異/調整、試算、重算、發佈）
+- **例外處理**: 
+  - 資料不一致（缺單/重複）→ 顯示差異報表與待修清單
+  - 計算結果為負/超閾值 → 需人工覆核才能 POST
+  - POSTED 後禁止更改（需作調整單）
+
+**用戶故事**:
+作為財務與營運，我要定期自動生成加盟結算並交付入帳。
+
+**驗收標準**:
+```yaml
+- 條件: 正常期間交易齊全
+  預期結果: 產生 DRAFT 結算單與正確金額
+
+- 條件: 金額超出風險閾值
+  預期結果: 標記需覆核，未覆核不可 POST
+
+- 條件: POST 後重跑
+  預期結果: 被拒絕或產生「調整單」流程
+```
+
+**技術需求**:
+- **API 端點**: 
+  - `POST /api/v1/partners/settlements/run`
+  - `GET /api/v1/partners/settlements/{id}`
+  - `POST /api/v1/partners/settlements/{id}/post`
+- **數據模型**: SettlementStatement, SettlementLine
+- **權限要求**: 需要 finance.manager 或 system.admin 權限
+
+**追蹤資訊**:
+- **Tests**: `tests/unit/FR-SA-OBM-008.test.py`
+- **Code**: `src/modules/system-admin/organization/settlements/**`
+- **TOC**: `TOC Modules.md` [13.5-SA-OBM]
+
+**依賴關係**:
+- **依賴模組**: 06-OM (訂單), 11-FA (財務), 08-WMS (退貨)
+- **依賴功能**: 交易資料彙總、財務分錄
+- **外部服務**: 無
+
+---
+
+### FR-SA-OBM-009: 資料同步策略（主檔單向、交易雙向）與連接設定
+**狀態**: 🔴 未開始  
+**優先級**: P1
+
+**功能描述**:
+於分區層級設定資料同步策略：主檔（品項/客戶/價表等）由 HQ → 外部單向；交易（訂單/出貨/退貨）雙向。設定外部 API/Webhook/SFTP 端點、映射與重試/死信佇列。
+
+**功能需求細節**:
+- **條件/觸發**: is_external 分區開啟「整合設定」
+- **行為**: 
+  - 設定 allowed_entities: { master_one_way, txn_two_way }
+  - 設定 endpoints: inbound/outbound、認證、密鑰
+  - 映射：欄位對映/轉換、幣別/稅碼對映
+  - 可靠性：重試策略、DLQ、冪等鍵
+  - 對帳：每日/每期自動對帳報表
+- **資料輸入**: 
+  - endpoints: [{category, direction, url, auth_type, credential_ref, active}]
+  - mapping: [{entity, field_map, transform}]
+  - retry_policy: {max_attempts, backoff}
+  - idempotency_keys: [{entity, keys}]
+- **資料輸出**: 
+  - sync_policy 設定檔
+  - 健康檢查/最近同步狀態
+- **UI反應**: 「整合」分頁：端點、映射、健康狀態、對帳報告
+- **例外處理**: 
+  - 端點驗證失敗 → 不可啟用
+  - 對映不完整 → 警示且禁止啟用
+
+**用戶故事**:
+作為整合工程師，我要以租戶級設定完成對接且可監控。
+
+**驗收標準**:
+```yaml
+- 條件: 端點驗證通過、映射完整
+  預期結果: 可啟用並開始同步
+
+- 條件: 同步失敗達上限
+  預期結果: 進 DLQ 並告警；可人工重送
+
+- 條件: 對帳差異
+  預期結果: 生成差異清單供調整
+```
+
+**技術需求**:
+- **API 端點**: 
+  - `POST /api/v1/partners/{regionId}/integrations/endpoints`
+  - `PUT /api/v1/partners/{regionId}/integrations/policy`
+- **數據模型**: IntegrationEndpoint, DataSyncPolicy
+- **權限要求**: 需要 integration.admin 權限
+
+**追蹤資訊**:
+- **Tests**: `tests/unit/FR-SA-OBM-009.test.py`
+- **Code**: `src/modules/system-admin/organization/integration/**`
+- **TOC**: `TOC Modules.md` [13.5-SA-OBM]
+
+**依賴關係**:
+- **依賴模組**: 所有交易相關模組
+- **依賴功能**: 資料匯入/匯出、對帳機制
+- **外部服務**: 加盟商 API/Webhook/SFTP
+
+---
+
+### FR-SA-OBM-010: 合約到期自動處理（凍結/寬限/續約）
+**狀態**: 🔴 未開始  
+**優先級**: P0
+
+**功能描述**:
+於合約到期前 T-90/60/30/7/1 發送預警；到期自動依策略執行：凍結新交易、僅允許結清、進入寬限期 N 天後強制停用；續約則自動切換至新版本。
+
+**功能需求細節**:
+- **條件/觸發**: 排程掃描所有有效合約
+- **行為**: 
+  - 通知：Email/站內/Webhook
+  - 到期日觸發策略：FREEZE_NEW|READ_ONLY|SHUTDOWN_AFTER_GRACE
+  - 續約：新版本 start_date 無縫接續
+- **資料輸入**: contract.policy: {on_expire, grace_days}
+- **資料輸出**: 
+  - 狀態變更：region_operability flags
+  - 審計日誌
+- **UI反應**: 合約時間軸、提醒設定、當前狀態旗標
+- **例外處理**: 存在未結清結算單 → 僅允許結清/出清
+
+**用戶故事**:
+作為法遵與營運，我要在到期自動控管風險並提供續約銜接。
+
+**驗收標準**:
+```yaml
+- 條件: T-30 發送預警
+  預期結果: 指定收件人收到通知
+
+- 條件: 到期且策略=FREEZE_NEW
+  預期結果: 新訂單 API 被拒絕（403/業務代碼）
+
+- 條件: 有新版本合約同日生效
+  預期結果: 自動切換至新版本並解除凍結
+```
+
+**技術需求**:
+- **API 端點**: 內部排程任務，無對外 API
+- **數據模型**: PartnerContract (status, policy)
+- **權限要求**: 系統排程執行
+
+**追蹤資訊**:
+- **Tests**: `tests/unit/FR-SA-OBM-010.test.py`
+- **Code**: `src/modules/system-admin/organization/scheduler/**`
+- **TOC**: `TOC Modules.md` [13.5-SA-OBM]
+
+**依賴關係**:
+- **依賴模組**: 01.2-DSH-NC (通知中心)
+- **依賴功能**: 通知發送、排程任務
+- **外部服務**: Email/Webhook 服務
+
+---
+
+### FR-SA-OBM-011: 獨立報表權限（RLS 租戶隔離與 HQ 彙總）
+**狀態**: 🔴 未開始  
+**優先級**: P0
+
+**功能描述**:
+為外部分區設定報表資料範圍（租戶/分區級 RLS），OBM 輸出報表作用域定義供 BI 套用；HQ 可見全局彙總，外部僅見自身租戶。
+
+**功能需求細節**:
+- **條件/觸發**: is_external 分區建立
+- **行為**: 
+  - 定義 report_scope: { tenant_id, region_ids, datasets }
+  - 匯出 RLS/ACL 配置給 BI（API/配置檔）
+- **資料輸入**: datasets, scopes, roles
+- **資料輸出**: rls_payload 給 BI
+- **UI反應**: 報表權限設定頁（測試視圖）
+- **例外處理**: 未關聯 tenant_id → 禁止啟用
+
+**用戶故事**:
+作為資料治理，我要保證外部只能看到自己的數據。
+
+**驗收標準**:
+```yaml
+- 條件: 外部使用者查詢報表
+  預期結果: 僅返回自身租戶資料
+
+- 條件: HQ 查詢
+  預期結果: 返回全公司含外部匯總
+```
+
+**技術需求**:
+- **API 端點**: 
+  - `GET /api/v1/partners/{regionId}/reports/scope`
+- **數據模型**: 報表權限設定
+- **權限要求**: 需要 system.admin 權限
+
+**追蹤資訊**:
+- **Tests**: `tests/unit/FR-SA-OBM-011.test.py`
+- **Code**: `src/modules/system-admin/organization/rls/**`
+- **TOC**: `TOC Modules.md` [13.5-SA-OBM]
+
+**依賴關係**:
+- **依賴模組**: 12-BI (商業智慧), 13.1-SA-UPM (權限管理)
+- **依賴功能**: RLS 機制、報表權限
+- **外部服務**: BI 報表平台
 
 ## 非功能需求
 
