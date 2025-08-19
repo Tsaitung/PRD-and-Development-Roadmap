@@ -83,6 +83,20 @@ The dashboard at `/docs/dashboard/` provides real-time visualization of project 
    - Use structured YAML format for acceptance criteria
    - Priority levels: P0 (highest), P1, P2, P3
 
+### Module Status Rules
+
+**IMPORTANT**: Module development status follows strict rules defined in `/docs/tracking-rules.md`:
+
+1. **未開始 (Not Started) - 🔴**: Modules WITHOUT a PRD file (prd.md or README.md) OR only have old system running
+2. **開發中 (In Development) - 🟡**: Modules WITH valid PRD files AND active development  
+3. **規劃中 (Planning) - ⚪**: Modules with PRD folder but no content or insufficient content
+4. **Only modules with actual PRD files can be marked as "In Development"**
+5. **Current modules with valid PRD**: 
+   - DSH-OV (prd.md)
+   - BDM-UNIT (README.md)
+   - OP-MC (README.md)
+   - SA-OBM (prd.md)
+
 ### GitHub Actions Integration
 
 The project heavily relies on GitHub Actions for automation:

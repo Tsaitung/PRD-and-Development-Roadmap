@@ -51,27 +51,39 @@ class ModuleStatusChecker:
                 break
         
         if not module_prd_path or not module_prd_path.exists():
-            return "🔴"  # 未開始
-        
-        # 檢查是否有 README.md
-        readme_files = list(module_prd_path.rglob("README.md"))
-        if not readme_files:
             return "⚪"  # 規劃中
         
-        # 檢查 README.md 內容完整性
-        complete_count = 0
-        for readme in readme_files:
-            content = readme.read_text(encoding='utf-8')
-            if len(content) > 500:  # 簡單判斷內容是否充實
-                complete_count += 1
+        # 檢查是否有 prd.md 文件（新標準）
+        prd_files = list(module_prd_path.rglob("prd.md"))
+        if prd_files:
+            # 檢查 prd.md 內容
+            for prd_file in prd_files:
+                content = prd_file.read_text(encoding='utf-8')
+                if len(content) > 500:  # 簡單判斷內容是否充實
+                    return "✅"  # 完成
+                else:
+                    return "🟡"  # 開發中
         
-        if complete_count > 0:
-            return "🟡" if complete_count < len(readme_files) else "✅"
+        # 檢查是否有 README.md（舊標準）
+        readme_files = list(module_prd_path.rglob("README.md"))
+        if readme_files:
+            # 檢查 README.md 內容完整性
+            for readme in readme_files:
+                content = readme.read_text(encoding='utf-8')
+                if len(content) > 500:  # 簡單判斷內容是否充實
+                    return "🟡"  # 開發中
         
         return "⚪"  # 規劃中
     
     def check_implementation_status(self, module_code: str) -> Tuple[str, str]:
         """檢查程式碼實作狀態"""
+        # 先檢查是否有 PRD 文件
+        prd_status = self.check_prd_status(module_code)
+        
+        # 如果沒有 PRD 文件（規劃中），則實作狀態必須為未開始
+        if prd_status == "⚪":  # 規劃中
+            return "🔴", "🔴"  # 未開始
+        
         # 搜尋相關的 tsx/ts 檔案
         module_files = []
         
@@ -85,11 +97,16 @@ class ModuleStatusChecker:
             # 檢查是否在 TOC Modules.md 中有提到檔案路徑
             toc_content = self.toc_file.read_text(encoding='utf-8')
             if f"/{module_code.lower()}" in toc_content.lower() or ".tsx" in toc_content:
-                return "🟡", "🟡"  # 開發中
+                # 只有在有 PRD 的情況下才能標記為開發中
+                if prd_status in ["✅", "🟡"]:
+                    return "🟡", "🟡"  # 開發中
             return "🔴", "🔴"  # 未開始
         
-        # 有檔案表示至少部分整合
-        return "🟡", "🟡"
+        # 有檔案且有 PRD 表示至少部分整合
+        if prd_status in ["✅", "🟡"]:
+            return "🟡", "🟡"
+        
+        return "🔴", "🔴"  # 未開始
     
     def check_test_status(self, module_code: str) -> Tuple[str, str]:
         """檢查測試狀態"""
