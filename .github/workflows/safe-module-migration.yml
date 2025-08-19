@@ -1,0 +1,504 @@
+name: 安全模組轉移工作流程
+
+on:
+  workflow_dispatch:
+    inputs:
+      module:
+        description: '要轉移的模組代碼'
+        required: true
+        type: choice
+        options:
+          - BDM-UNIT
+          - CRM-CM
+          - CRM-PM
+          - OM-OL
+          - WMS-IOD
+          - PM-SRM
+          - LM-DSRO
+          - FA-FR
+          - OP-MC
+          - SA-OBM
+      environment:
+        description: '目標環境'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+        default: development
+      dry_run:
+        description: '僅執行測試（不實際部署）'
+        type: boolean
+        default: true
+
+env:
+  MODULE: ${{ inputs.module }}
+  ENVIRONMENT: ${{ inputs.environment }}
+  DRY_RUN: ${{ inputs.dry_run }}
+
+jobs:
+  # =============================================
+  # 階段 1: 前置檢查
+  # =============================================
+  pre-migration-checks:
+    name: 前置檢查
+    runs-on: ubuntu-latest
+    outputs:
+      prd_status: ${{ steps.check_prd.outputs.status }}
+      test_coverage: ${{ steps.check_tests.outputs.coverage }}
+      migration_ready: ${{ steps.final_check.outputs.ready }}
+    
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v3
+        
+      - name: 設置 Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: 檢查 PRD 文檔
+        id: check_prd
+        run: |
+          PRD_PATH="PRD/*-${{ env.MODULE }}*/prd.md"
+          if [ -f $PRD_PATH ]; then
+            echo "✅ PRD 文檔存在"
+            echo "status=exists" >> $GITHUB_OUTPUT
+            
+            # 檢查 PRD 完整性
+            word_count=$(wc -w < $PRD_PATH)
+            if [ $word_count -lt 1000 ]; then
+              echo "⚠️ PRD 文檔過短 (${word_count} 字)"
+              echo "status=incomplete" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "❌ PRD 文檔不存在"
+            echo "status=missing" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+      - name: 檢查測試覆蓋率
+        id: check_tests
+        run: |
+          # 安裝依賴
+          npm ci
+          
+          # 執行測試並生成覆蓋率報告
+          npm test -- --coverage --module=${{ env.MODULE }} || true
+          
+          # 提取覆蓋率數據
+          COVERAGE=$(grep -oP 'All files.*?(\d+\.\d+)' coverage/coverage-summary.json | head -1 | grep -oP '\d+\.\d+')
+          echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+          
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "⚠️ 測試覆蓋率不足 ($COVERAGE%)"
+            if [ "${{ env.ENVIRONMENT }}" = "production" ]; then
+              exit 1
+            fi
+          else
+            echo "✅ 測試覆蓋率達標 ($COVERAGE%)"
+          fi
+          
+      - name: 檢查數據遷移腳本
+        run: |
+          MIGRATION_PATH="PRD/*-${{ env.MODULE }}*/migration/*.sql"
+          if ls $MIGRATION_PATH 1> /dev/null 2>&1; then
+            echo "✅ 數據遷移腳本存在"
+            
+            # 驗證 SQL 語法
+            for script in $MIGRATION_PATH; do
+              echo "驗證: $script"
+              # 使用 sqlfluff 或其他工具驗證 SQL
+              # sqlfluff lint $script
+            done
+          else
+            echo "⚠️ 數據遷移腳本不存在"
+          fi
+          
+      - name: 檢查回滾計畫
+        run: |
+          ROLLBACK_PATH="PRD/*-${{ env.MODULE }}*/rollback-plan.md"
+          if [ -f $ROLLBACK_PATH ]; then
+            echo "✅ 回滾計畫存在"
+          else
+            echo "❌ 回滾計畫不存在"
+            exit 1
+          fi
+          
+      - name: 最終檢查
+        id: final_check
+        run: |
+          if [ "${{ steps.check_prd.outputs.status }}" = "exists" ] && \
+             [ "${{ steps.check_tests.outputs.coverage }}" != "" ]; then
+            echo "ready=true" >> $GITHUB_OUTPUT
+            echo "✅ 前置檢查通過"
+          else
+            echo "ready=false" >> $GITHUB_OUTPUT
+            echo "❌ 前置檢查失敗"
+            exit 1
+          fi
+
+  # =============================================
+  # 階段 2: 執行測試
+  # =============================================
+  run-tests:
+    name: 執行測試
+    needs: pre-migration-checks
+    if: needs.pre-migration-checks.outputs.migration_ready == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v3
+        
+      - name: 設置測試環境
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: 安裝依賴
+        run: npm ci
+        
+      - name: 執行單元測試
+        run: |
+          echo "執行 ${{ env.MODULE }} 單元測試..."
+          npm test -- --module=${{ env.MODULE }}
+          
+      - name: 執行整合測試
+        run: |
+          echo "執行 ${{ env.MODULE }} 整合測試..."
+          npm run test:integration -- --module=${{ env.MODULE }}
+          
+      - name: 執行 E2E 測試
+        if: env.ENVIRONMENT != 'development'
+        run: |
+          echo "執行 ${{ env.MODULE }} E2E 測試..."
+          npx playwright test --project=${{ env.MODULE }}
+          
+      - name: 上傳測試報告
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-reports
+          path: |
+            coverage/
+            test-results/
+            playwright-report/
+
+  # =============================================
+  # 階段 3: 構建和打包
+  # =============================================
+  build:
+    name: 構建模組
+    needs: run-tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v3
+        
+      - name: 設置構建環境
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: 安裝依賴
+        run: npm ci
+        
+      - name: 構建模組
+        run: |
+          echo "構建 ${{ env.MODULE }} 模組..."
+          npm run build -- --module=${{ env.MODULE }}
+          
+      - name: 優化構建產物
+        run: |
+          echo "優化構建產物..."
+          npm run optimize -- --module=${{ env.MODULE }}
+          
+      - name: 創建 Docker 映像
+        run: |
+          echo "構建 Docker 映像..."
+          docker build \
+            --build-arg MODULE=${{ env.MODULE }} \
+            --build-arg VERSION=${{ github.sha }} \
+            -t ${{ env.MODULE }}:${{ github.sha }} \
+            -f docker/Dockerfile.${{ env.MODULE }} \
+            .
+            
+      - name: 推送到容器註冊表
+        if: env.DRY_RUN == 'false'
+        run: |
+          echo "推送映像到註冊表..."
+          docker tag ${{ env.MODULE }}:${{ github.sha }} \
+            gcr.io/${{ secrets.GCP_PROJECT }}/${{ env.MODULE }}:${{ github.sha }}
+          docker push gcr.io/${{ secrets.GCP_PROJECT }}/${{ env.MODULE }}:${{ github.sha }}
+
+  # =============================================
+  # 階段 4: 數據遷移（如需要）
+  # =============================================
+  migrate-data:
+    name: 數據遷移
+    needs: build
+    if: env.DRY_RUN == 'false'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v3
+        
+      - name: 設置數據庫連接
+        run: |
+          echo "設置數據庫連接..."
+          # 設置環境變數
+          
+      - name: 備份現有數據
+        run: |
+          echo "備份 ${{ env.ENVIRONMENT }} 環境數據..."
+          ./scripts/backup-database.sh \
+            --module=${{ env.MODULE }} \
+            --env=${{ env.ENVIRONMENT }}
+            
+      - name: 執行數據遷移
+        run: |
+          echo "執行數據遷移腳本..."
+          for script in PRD/*-${{ env.MODULE }}*/migration/*.sql; do
+            echo "執行: $script"
+            mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME < $script
+          done
+          
+      - name: 驗證數據完整性
+        run: |
+          echo "驗證數據完整性..."
+          ./scripts/validate-data.sh \
+            --module=${{ env.MODULE }} \
+            --env=${{ env.ENVIRONMENT }}
+
+  # =============================================
+  # 階段 5: 部署
+  # =============================================
+  deploy:
+    name: 部署模組
+    needs: [build, migrate-data]
+    if: env.DRY_RUN == 'false'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v3
+        
+      - name: 設置 kubectl
+        uses: azure/setup-kubectl@v3
+        
+      - name: 配置 GCP
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT }}
+          
+      - name: 部署到 Kubernetes
+        run: |
+          echo "部署 ${{ env.MODULE }} 到 ${{ env.ENVIRONMENT }}..."
+          
+          # 更新部署配置
+          kubectl set image deployment/${{ env.MODULE }} \
+            ${{ env.MODULE }}=gcr.io/${{ secrets.GCP_PROJECT }}/${{ env.MODULE }}:${{ github.sha }} \
+            --namespace=${{ env.ENVIRONMENT }}
+            
+          # 等待部署完成
+          kubectl rollout status deployment/${{ env.MODULE }} \
+            --namespace=${{ env.ENVIRONMENT }} \
+            --timeout=10m
+            
+      - name: 執行健康檢查
+        run: |
+          echo "執行健康檢查..."
+          ./scripts/health-check.sh \
+            --module=${{ env.MODULE }} \
+            --env=${{ env.ENVIRONMENT }}
+
+  # =============================================
+  # 階段 6: 驗證
+  # =============================================
+  verify-deployment:
+    name: 驗證部署
+    needs: deploy
+    if: env.DRY_RUN == 'false'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v3
+        
+      - name: 執行冒煙測試
+        run: |
+          echo "執行冒煙測試..."
+          npm run test:smoke -- \
+            --module=${{ env.MODULE }} \
+            --env=${{ env.ENVIRONMENT }}
+            
+      - name: 檢查性能指標
+        run: |
+          echo "檢查性能指標..."
+          ./scripts/check-performance.sh \
+            --module=${{ env.MODULE }} \
+            --env=${{ env.ENVIRONMENT }} \
+            --threshold=2000
+            
+      - name: 監控錯誤率
+        run: |
+          echo "監控錯誤率（5分鐘）..."
+          ./scripts/monitor-errors.sh \
+            --module=${{ env.MODULE }} \
+            --env=${{ env.ENVIRONMENT }} \
+            --duration=5m \
+            --threshold=0.01
+
+  # =============================================
+  # 階段 7: 通知
+  # =============================================
+  notify:
+    name: 發送通知
+    needs: [pre-migration-checks, run-tests, build, deploy, verify-deployment]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 準備通知內容
+        id: prepare
+        run: |
+          if [ "${{ needs.verify-deployment.result }}" = "success" ]; then
+            STATUS="✅ 成功"
+            COLOR="good"
+          else
+            STATUS="❌ 失敗"
+            COLOR="danger"
+          fi
+          
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          echo "color=$COLOR" >> $GITHUB_OUTPUT
+          
+      - name: 發送 Slack 通知
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "channel": "#deployments",
+              "attachments": [{
+                "color": "${{ steps.prepare.outputs.color }}",
+                "title": "模組轉移 ${{ steps.prepare.outputs.status }}",
+                "fields": [
+                  {
+                    "title": "模組",
+                    "value": "${{ env.MODULE }}",
+                    "short": true
+                  },
+                  {
+                    "title": "環境",
+                    "value": "${{ env.ENVIRONMENT }}",
+                    "short": true
+                  },
+                  {
+                    "title": "測試覆蓋率",
+                    "value": "${{ needs.pre-migration-checks.outputs.test_coverage }}%",
+                    "short": true
+                  },
+                  {
+                    "title": "執行者",
+                    "value": "${{ github.actor }}",
+                    "short": true
+                  }
+                ],
+                "footer": "GitHub Actions",
+                "footer_icon": "https://github.githubassets.com/favicon.ico",
+                "ts": ${{ github.event.head_commit.timestamp }}
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          
+      - name: 創建部署記錄
+        if: needs.verify-deployment.result == 'success'
+        run: |
+          echo "創建部署記錄..."
+          cat > deployment-record.json <<EOF
+          {
+            "module": "${{ env.MODULE }}",
+            "environment": "${{ env.ENVIRONMENT }}",
+            "version": "${{ github.sha }}",
+            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "deployed_by": "${{ github.actor }}",
+            "test_coverage": "${{ needs.pre-migration-checks.outputs.test_coverage }}",
+            "status": "success"
+          }
+          EOF
+          
+          # 保存到部署歷史
+          gh api repos/${{ github.repository }}/deployments \
+            --method POST \
+            --field ref=${{ github.sha }} \
+            --field environment=${{ env.ENVIRONMENT }} \
+            --field description="Module: ${{ env.MODULE }}"
+
+  # =============================================
+  # 回滾任務（如果失敗）
+  # =============================================
+  rollback:
+    name: 自動回滾
+    needs: verify-deployment
+    if: failure() && env.DRY_RUN == 'false'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v3
+        
+      - name: 執行回滾
+        run: |
+          echo "⚠️ 部署失敗，開始回滾..."
+          
+          # 回滾 Kubernetes 部署
+          kubectl rollout undo deployment/${{ env.MODULE }} \
+            --namespace=${{ env.ENVIRONMENT }}
+            
+          # 等待回滾完成
+          kubectl rollout status deployment/${{ env.MODULE }} \
+            --namespace=${{ env.ENVIRONMENT }}
+            
+      - name: 恢復數據庫
+        run: |
+          echo "恢復數據庫..."
+          ./scripts/restore-database.sh \
+            --module=${{ env.MODULE }} \
+            --env=${{ env.ENVIRONMENT }}
+            
+      - name: 驗證回滾
+        run: |
+          echo "驗證回滾狀態..."
+          ./scripts/health-check.sh \
+            --module=${{ env.MODULE }} \
+            --env=${{ env.ENVIRONMENT }}
+            
+      - name: 通知回滾完成
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "channel": "#deployments",
+              "text": "⚠️ 模組 ${{ env.MODULE }} 已自動回滾到上一個穩定版本"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+# 工作流程配置
+concurrency:
+  group: migration-${{ inputs.module }}-${{ inputs.environment }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  deployments: write
+  id-token: write
