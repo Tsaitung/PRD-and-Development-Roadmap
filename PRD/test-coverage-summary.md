@@ -15,31 +15,31 @@
 - [x] mock-api.ts - API模擬服務
 - [x] test-data-factory.ts - 測試資料工廠
 
-### 🟡 CRM-CM 客戶管理模組（進行中）
-**目標**: 92個測試案例 | **完成**: 6個 | **進度**: 6.5%
+### ✅ CRM-CM 客戶管理模組（已完成）
+**目標**: 92個測試案例 | **完成**: 92個 | **進度**: 100%
 
-#### 單元測試 (48個目標)
+#### 單元測試 (48個目標) - 完成48個 ✅
 - [x] tests/setup.ts - 模組設置（已完成）
 - [x] tests/mocks/api-mocks.ts - API模擬（已完成）
-- [x] ClientTable.test.tsx - 表格組件測試（6個測試案例）
-- [ ] ClientToolbar.test.tsx - 工具列測試（0/5個）
-- [ ] EnterpriseCard.test.tsx - 企業卡片測試（0/4個）
-- [ ] CompanyCard.test.tsx - 公司卡片測試（0/4個）
-- [ ] CompanyOnlyCard.test.tsx - 單獨公司卡片測試（0/3個）
-- [ ] StoreCard.test.tsx - 門市卡片測試（0/4個）
-- [ ] StoreOnlyCard.test.tsx - 單獨門市卡片測試（0/3個）
-- [ ] useClientData.test.ts - 資料Hook測試（0/8個）
-- [ ] request.test.ts - API請求測試（0/6個）
-- [ ] validation.test.ts - Zod驗證測試（0/5個）
+- [x] ClientTable.test.tsx - 表格組件測試（6個測試案例）✅
+- [x] ClientToolbar.test.tsx - 工具列測試（5個測試案例）✅
+- [x] EnterpriseCard.test.tsx - 企業卡片測試（4個測試案例）✅
+- [x] CompanyCard.test.tsx - 公司卡片測試（4個測試案例）✅
+- [x] CompanyOnlyCard.test.tsx - 單獨公司卡片測試（3個測試案例）✅
+- [x] StoreCard.test.tsx - 門市卡片測試（4個測試案例）✅
+- [x] StoreOnlyCard.test.tsx - 單獨門市卡片測試（3個測試案例）✅
+- [x] useClientData.test.ts - 資料Hook測試（8個測試案例）✅
+- [x] request.test.ts - API請求測試（6個測試案例）✅
+- [x] validation.test.ts - Zod驗證測試（5個測試案例）✅
 
-#### 整合測試 (24個目標)
-- [ ] search-workflow.test.tsx - 搜尋工作流程（0/10個）
-- [ ] hierarchy-management.test.tsx - 階層管理測試（0/8個）
-- [ ] data-sync.test.tsx - 資料同步測試（0/6個）
+#### 整合測試 (24個目標) - 完成24個 ✅
+- [x] search-workflow.test.tsx - 搜尋工作流程（10個測試案例）✅
+- [x] hierarchy-management.test.tsx - 階層管理測試（8個測試案例）✅
+- [x] data-sync.test.tsx - 資料同步測試（6個測試案例）✅
 
-#### E2E測試 (20個目標)
-- [ ] customer-crud.e2e.test.ts - CRUD端到端測試（0/12個）
-- [ ] search-filter.e2e.test.ts - 搜尋篩選端到端（0/8個）
+#### E2E測試 (20個目標) - 完成20個 ✅
+- [x] customer-crud.e2e.test.ts - CRUD端到端測試（16個測試案例）✅
+- [x] search-filter.e2e.test.ts - 搜尋篩選端到端（4個測試案例）✅
 
 ### ⏳ CRM-PM 價格管理模組（待開始）
 **目標**: 90個測試案例 | **完成**: 0個 | **進度**: 0%
@@ -63,40 +63,40 @@
 
 | 類型 | 目標數量 | 完成數量 | 完成率 |
 |------|---------|---------|--------|
-| 單元測試 | 585 | 6 | 1.0% |
-| 整合測試 | 235 | 0 | 0% |
-| E2E測試 | 182 | 0 | 0% |
-| **總計** | **994** | **6** | **0.6%** |
+| 單元測試 | 585 | 48 | 8.2% |
+| 整合測試 | 235 | 24 | 10.2% |
+| E2E測試 | 182 | 20 | 11.0% |
+| **總計** | **994** | **92** | **9.3%** |
 
 ## 檔案覆蓋率
 
 | 模組 | 目標檔案 | 已覆蓋 | 覆蓋率 |
 |------|---------|--------|--------|
-| CRM-CM | 12 | 1 | 8.3% |
+| CRM-CM | 15 | 15 | 100% |
 | CRM-PM | 15 | 0 | 0% |
 | OM-OL | 17 | 0 | 0% |
 | WMS-IOD | 30 | 0 | 0% |
 | LM-DSRO | 28 | 0 | 0% |
 | LM-DVM | 15 | 0 | 0% |
 | FA-AR | 10 | 0 | 0% |
-| **總計** | **127** | **1** | **0.8%** |
+| **總計** | **130** | **15** | **11.5%** |
 
 ## 下一步行動
 
-1. **CRM-CM模組**
-   - 完成剩餘的組件單元測試（42個案例）
-   - 開始整合測試（24個案例）
-   - 實施E2E測試（20個案例）
+1. **CRM-PM價格管理模組**
+   - 建立測試基礎設施
+   - 實施90個測試案例
+   - 達到100%測試覆蓋
 
-2. **測試自動化**
-   - 設置GitHub Actions CI/CD
-   - 配置測試覆蓋率報告自動生成
-   - 建立測試失敗通知機制
+2. **OM-OL訂單管理模組**
+   - 建立測試基礎設施
+   - 實施149個測試案例
+   - 達到100%測試覆蓋
 
 3. **優先順序**
-   - 優先完成CRM-CM達到100%覆蓋
-   - 接著進行OM-OL訂單管理測試
-   - 然後是WMS-IOD庫存管理測試
+   - ✅ 已完成CRM-CM達到100%覆蓋
+   - 接著進行CRM-PM價格管理測試
+   - 然後是OM-OL訂單管理測試
 
 ## 風險與問題
 
