@@ -28,65 +28,124 @@
 ## 二、功能需求
 
 ### FR-BDM-UNIT-001: 單位列表管理
-**優先級**: P1-高
+**狀態**: 🟡 開發中
+**優先級**: P0
 
 **功能描述**:
-提供單位資料的完整列表展示，支援搜尋和篩選功能。
+提供單位資料的完整列表展示，支援搜尋、篩選和排序功能，作為單位管理的主要介面。
 
-**詳細需求**:
-1. 顯示欄位：
-   - 單位名稱 (unitName)
-   - 單位類型 (unitType)
-   - 誤差範圍 (variance) - 百分比顯示
-   - 是否為精確單位 (isExact)
-   - 換算為公斤 (conversionToKG)
-   - 創建時間 (created_at)
-   - 更新時間 (updated_at)
+**功能需求細節**:
+- **條件/觸發**: 當用戶訪問單位管理頁面或執行搜尋/篩選操作時
+- **行為**: 系統載入並顯示符合條件的單位列表，支援分頁和排序
+- **資料輸入**: 搜尋關鍵字、篩選條件(單位類型)、排序選項、頁碼
+- **資料輸出**: 單位列表(含所有欄位)、總筆數、當前頁碼
+- **UI反應**: 載入動畫、搜尋即時響應、排序視覺指示、分頁控制
+- **例外處理**: 無資料顯示空狀態、搜尋逾時提示、分頁錯誤處理
 
-2. 搜尋功能：
-   - 支援按單位名稱模糊搜尋
-   - 搜尋不區分大小寫
-   - 即時搜尋（輸入後自動觸發）
-
-3. 排序功能：
-   - 預設按創建時間倒序
-   - 支援按單位名稱、類型排序
+**用戶故事**:
+作為系統管理員，
+我希望能查看和搜尋所有計量單位，
+以便管理和維護單位資料。
 
 **驗收標準**:
-- [ ] 頁面載入時間 < 2秒
-- [ ] 搜尋響應時間 < 500ms
-- [ ] 列表支援分頁（每頁20筆）
-- [ ] 正確顯示所有欄位資料
+```yaml
+- 條件: 載入單位列表頁面
+  預期結果: 2秒內顯示單位列表並預設按創建時間倒序
+  
+- 條件: 輸入搜尋關鍵字"公斤"
+  預期結果: 500ms內顯示包含"公斤"的所有單位
+  
+- 條件: 單位數量超過20筆
+  預期結果: 自動分頁顯示，每頁20筆
+```
+
+**技術需求**:
+- **API 端點**: `GET /api/v1/units`
+- **請求/回應**: 
+  ```json
+  // 請求
+  GET /api/v1/units?search=公斤&type=weight&page=1&limit=20
+  
+  // 回應
+  {
+    "data": [{...}],
+    "total": 50,
+    "page": 1,
+    "limit": 20
+  }
+  ```
+- **數據模型**: units表
+- **權限要求**: unit.view
+- **認證方式**: JWT Token
+
+**追蹤資訊**:
+- **Tests**: `tests/unit/FR-BDM-UNIT-001.test.ts`
+- **Code**: `src/modules/bdm/unit/list/`
+- **TOC**: `TOC Modules.md` 第103行
+
+**依賴關係**:
+- **依賴模組**: SA-UPM (用戶權限)
+- **依賴功能**: 無
+- **外部服務**: 無
 
 ### FR-BDM-UNIT-002: 新增單位
-**優先級**: P1-高
+**狀態**: 🟡 開發中
+**優先級**: P0
 
 **功能描述**:
-提供新增計量單位的功能，包含完整的資料驗證。
+提供新增計量單位的功能，包含完整的資料驗證和重複檢查。
 
-**詳細需求**:
-1. 必填欄位：
-   - 單位名稱：1-20個字元
-   - 單位類型：下拉選單（重量/體積/數量/長度/面積/包裝）
-   - 誤差範圍：0-100的數值
-   - 是否為精確單位：是/否選項
-   - 換算為公斤：大於0的數值
+**功能需求細節**:
+- **條件/觸發**: 當用戶點擊"新增單位"按鈕並填寫表單時
+- **行為**: 系統驗證輸入資料，檢查重複性，儲存新單位資料
+- **資料輸入**: 單位名稱(1-20字)、類型、誤差範圍(0-100)、精確性、換算率(>0)
+- **資料輸出**: 新單位ID、創建時間戳、成功訊息
+- **UI反應**: 即時驗證提示、儲存進度、成功通知、表單重置
+- **例外處理**: 重複名稱警告、驗證失敗提示、網路錯誤重試
 
-2. 驗證規則：
-   - 單位名稱不可重複
-   - 換算率必須為正數
-   - 誤差範圍為0-100之間
-
-3. 使用者體驗：
-   - 提供清晰的欄位說明
-   - 即時顯示驗證錯誤
-   - 成功後自動關閉表單並更新列表
+**用戶故事**:
+作為基礎數據維護人員，
+我希望能新增新的計量單位，
+以便擴充系統的單位選項。
 
 **驗收標準**:
-- [ ] 所有必填欄位都有驗證
-- [ ] 防止重複單位名稱
-- [ ] 錯誤訊息清晰明確
-- [ ] 新增成功後立即顯示在列表中
+```yaml
+- 條件: 輸入完整有效的單位資料
+  預期結果: 成功儲存並顯示成功訊息
+  
+- 條件: 輸入已存在的單位名稱
+  預期結果: 顯示"單位名稱已存在"錯誤
+  
+- 條件: 誤差範圍輸入150
+  預期結果: 顯示"誤差範圍必須在0-100之間"錯誤
+```
+
+**技術需求**:
+- **API 端點**: `POST /api/v1/units`
+- **請求/回應**: 
+  ```json
+  // 請求
+  {
+    "unitName": "公斤",
+    "unitType": "weight",
+    "variance": 5,
+    "isExact": false,
+    "conversionToKG": 1.0
+  }
+  ```
+- **數據模型**: units表
+- **權限要求**: unit.create
+- **認證方式**: JWT Token
+
+**追蹤資訊**:
+- **Tests**: `tests/unit/FR-BDM-UNIT-002.test.ts`
+- **Code**: `src/modules/bdm/unit/create/`
+- **TOC**: `TOC Modules.md` 第103行
+
+**依賴關係**:
+- **依賴模組**: SA-UPM (用戶權限)
+- **依賴功能**: FR-BDM-UNIT-001 (列表更新)
+- **外部服務**: 無
 
 ### FR-BDM-UNIT-003: 編輯單位
 **優先級**: P1-高
@@ -225,6 +284,47 @@ enum UnitType {
   AREA = '面積',
   PACKAGE = '包裝'
 }
+```
+
+### 4.3 資料庫結構
+```sql
+-- 單位主檔表
+CREATE TABLE units (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  unit_name VARCHAR(50) UNIQUE NOT NULL,
+  unit_type VARCHAR(20) NOT NULL,
+  variance DECIMAL(5,2) NOT NULL CHECK (variance >= 0 AND variance <= 100),
+  is_exact BOOLEAN NOT NULL DEFAULT FALSE,
+  conversion_to_kg DECIMAL(15,6) NOT NULL CHECK (conversion_to_kg > 0),
+  description TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  sort_order INTEGER,
+  created_by UUID REFERENCES users(id),
+  updated_by UUID REFERENCES users(id),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  deleted_at TIMESTAMP,
+  
+  -- 索引
+  INDEX idx_unit_name (unit_name),
+  INDEX idx_unit_type (unit_type),
+  INDEX idx_is_active (is_active),
+  INDEX idx_deleted_at (deleted_at)
+);
+
+-- 單位操作日誌表
+CREATE TABLE unit_audit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  unit_id UUID NOT NULL REFERENCES units(id),
+  action VARCHAR(20) NOT NULL, -- CREATE, UPDATE, DELETE
+  old_data JSONB,
+  new_data JSONB,
+  changed_by UUID NOT NULL REFERENCES users(id),
+  changed_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  
+  INDEX idx_unit_id (unit_id),
+  INDEX idx_changed_at (changed_at)
+);
 ```
 
 ## 五、API設計
