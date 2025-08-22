@@ -1,0 +1,31 @@
+# Development Dockerfile with hot reload
+FROM node:18-alpine
+
+# Install development tools
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    git
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev)
+RUN npm ci && \
+    npm cache clean --force
+
+# Install nodemon globally for hot reload
+RUN npm install -g nodemon ts-node
+
+# Create necessary directories
+RUN mkdir -p logs uploads
+
+# Expose application port and debugger port
+EXPOSE 3000 9229
+
+# Default command (can be overridden in docker-compose)
+CMD ["npm", "run", "dev"]

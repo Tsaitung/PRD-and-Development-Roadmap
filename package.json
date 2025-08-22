@@ -10,10 +10,18 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:integration": "jest --testMatch='**/*.integration.test.ts' --runInBand",
+    "test:unit": "jest --testMatch='**/*.test.ts' --testPathIgnorePatterns='integration'",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "db:migrate": "ts-node src/database/migrate.ts",
-    "db:seed": "ts-node src/database/seed.ts"
+    "db:seed": "ts-node src/database/seed.ts",
+    "docker:build": "docker build -t tsaitung-erp:latest .",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f app",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up",
+    "docker:test": "docker-compose -f docker-compose.dev.yml --profile test up postgres-test"
   },
   "keywords": [
     "erp",
