@@ -165,13 +165,13 @@
 | 維度 | 狀態 | 說明 |
 |------|------|------|
 | 舊系統狀態 | ✅ | 有舊系統 |
-| 新系統更新 | 🔴 | 未開始 |
-| PRD完成度 | ⚪ | 規劃中 |
-| 系統整合 | 🔴 | 未開始 |
+| 新系統更新 | 🟡 | 未開始 |
+| PRD完成度 | ✅ | 規劃中 |
+| 系統整合 | 🟡 | 未開始 |
 | 單元測試 | 🔴 | 未開始 |
 | 整合測試 | 🔴 | 未開始 |
 | 錯誤追蹤 | - | 無相關 issues |
-| 上線進度 | 0% | 未開始 |
+| 上線進度 | 45% | 未開始 |
 ### 7. [MES] Manufacturing Execution System (MES) 生產管理
     7.1. [MES-WTM] Workstation / Task Management 工作站 / 派工管理（包裝、出車、分採買站台）
     7.2. [MES-PSWO] Production Scheduling & Work Orders 生產排程 & 工單
