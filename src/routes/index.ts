@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import warehouseRoutes from '../modules/warehouse/routes';
 import productionRoutes from '../modules/production/routes';
+import orderRoutes from '../modules/order/routes';
 
 const router = Router();
 
 // Module routes
 router.use('/warehouses', warehouseRoutes);
 router.use('/production', productionRoutes);
+router.use('/orders', orderRoutes);
 
 // Default route
 router.get('/', (req, res) => {
@@ -15,10 +17,28 @@ router.get('/', (req, res) => {
     version: '1.0.0',
     modules: {
       warehouse: '/warehouses',
-      production: '/production'
+      production: '/production',
+      orders: '/orders'
     },
     timestamp: new Date().toISOString()
   });
+});
+
+// Health check with detailed status
+router.get('/health', async (req, res) => {
+  const health = {
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV,
+    memory: {
+      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+      unit: 'MB'
+    }
+  };
+  
+  res.json(health);
 });
 
 export default router;
