@@ -3,6 +3,50 @@ import * as warehouseService from './service';
 import { AppError } from '../../middleware/errorHandler';
 import { logger } from '../../utils/logger';
 
+/**
+ * @swagger
+ * /warehouses/{warehouseId}/inventory:
+ *   get:
+ *     summary: Get inventory overview for a warehouse
+ *     tags: [Warehouse]
+ *     parameters:
+ *       - in: path
+ *         name: warehouseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Warehouse ID
+ *       - $ref: '#/components/parameters/pageParam'
+ *       - $ref: '#/components/parameters/limitParam'
+ *       - in: query
+ *         name: minQuantity
+ *         schema:
+ *           type: number
+ *         description: Minimum quantity filter
+ *       - in: query
+ *         name: maxQuantity
+ *         schema:
+ *           type: number
+ *         description: Maximum quantity filter
+ *     responses:
+ *       200:
+ *         description: Inventory overview retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 pagination:
+ *                   $ref: '#/components/schemas/Pagination'
+ *                 summary:
+ *                   type: object
+ */
 export const getInventoryOverview = async (
   req: Request,
   res: Response,
@@ -35,6 +79,29 @@ export const getInventoryOverview = async (
   }
 };
 
+/**
+ * @swagger
+ * /warehouses/{warehouseId}/inventory/{itemId}:
+ *   get:
+ *     summary: Get inventory for specific item in warehouse
+ *     tags: [Warehouse]
+ *     parameters:
+ *       - in: path
+ *         name: warehouseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: itemId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Item inventory retrieved
+ *       404:
+ *         description: Item not found in warehouse
+ */
 export const getInventoryByItem = async (
   req: Request,
   res: Response,

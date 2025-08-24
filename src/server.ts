@@ -4,11 +4,13 @@ import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
 import { logger } from './utils/logger';
 import { connectDatabase } from './database/connection';
 import { connectRedis } from './database/redis';
+import { swaggerSpec } from './config/swagger';
 import routes from './routes';
 
 // Load environment variables
@@ -61,6 +63,12 @@ class Server {
       });
     });
 
+    // Swagger documentation
+    this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+      customCss: '.swagger-ui .topbar { display: none }',
+      customSiteTitle: '菜蟲農食 ERP API Documentation'
+    }));
+
     // API routes
     const apiPrefix = process.env.API_PREFIX || '/api/v1';
     this.app.use(apiPrefix, routes);
@@ -81,6 +89,7 @@ class Server {
       this.app.listen(this.port, () => {
         logger.info(`🚀 Server is running on port ${this.port}`);
         logger.info(`📍 API endpoint: http://localhost:${this.port}${process.env.API_PREFIX || '/api/v1'}`);
+        logger.info(`📚 API Documentation: http://localhost:${this.port}/api-docs`);
         logger.info(`🏥 Health check: http://localhost:${this.port}/health`);
       });
     } catch (error) {

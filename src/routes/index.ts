@@ -2,6 +2,8 @@ import { Router } from 'express';
 import warehouseRoutes from '../modules/warehouse/routes';
 import productionRoutes from '../modules/production/routes';
 import orderRoutes from '../modules/order/routes';
+import customerRoutes from '../modules/customer/routes';
+import financeRoutes from '../modules/finance/routes';
 
 const router = Router();
 
@@ -9,6 +11,8 @@ const router = Router();
 router.use('/warehouses', warehouseRoutes);
 router.use('/production', productionRoutes);
 router.use('/orders', orderRoutes);
+router.use('/customers', customerRoutes);
+router.use('/finance', financeRoutes);
 
 // Default route
 router.get('/', (req, res) => {
@@ -18,7 +22,9 @@ router.get('/', (req, res) => {
     modules: {
       warehouse: '/warehouses',
       production: '/production',
-      orders: '/orders'
+      orders: '/orders',
+      customers: '/customers',
+      finance: '/finance'
     },
     timestamp: new Date().toISOString()
   });
