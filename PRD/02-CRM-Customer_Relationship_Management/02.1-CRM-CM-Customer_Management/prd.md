@@ -1,38 +1,45 @@
-# [CRM-CM] 客戶主檔管理 PRD 文件
+# [CRM-CM] 客戶管理 PRD 文件
 
 ## 模組資訊
 - **模組代碼**: CRM-CM
-- **模組名稱**: Customer Master / 客戶主檔管理
+- **模組名稱**: Customer Management / 客戶管理
 - **負責人**: 產品團隊
-- **最後更新**: 2025-08-21
-- **版本**: v1.0.0
+- **最後更新**: 2025-08-24
+- **版本**: v2.0.0
 
 ## 命名與狀態
 - FR 命名: `FR-CRM-CM-[序號]`
 - 狀態語彙：`🔴 未開始`｜`🟡 開發中`｜`✅ 完成`｜`⚪ 規劃中`
 
 ## 模組概述
-客戶主檔管理模組是CRM系統的核心基礎模組，負責管理所有客戶的基本資料、階層關係、聯絡資訊等。支援企業級客戶的複雜組織結構（總公司-分公司-門市），提供完整的客戶資料維護、查詢、匯入匯出功能。
+客戶管理模組是CRM系統的核心基礎模組，實現統一的 Company/Store/Unit 三層架構管理。此模組負責管理所有客戶的基本資料、階層關係、聯絡資訊等。支援企業級客戶的複雜組織結構，明確區分客戶公司（Company）、客戶據點（Store）、營運單位（Unit）三個層級，提供完整的客戶資料維護、查詢、匯入匯出功能。
+
+### 核心架構概念
+- **Company（客戶公司）**: 簽約與定價主體，代表客戶的公司實體
+- **Store（客戶據點/門市）**: 物流配送據點，隸屬於Company
+- **Unit（營運單位）**: 實際下單主體，目前與Company一對一對應
 
 ## 業務價值
-- 建立統一的客戶資料管理平台，確保資料一致性
+- 建立統一的 Company/Store/Unit 三層客戶資料管理平台，確保資料一致性
+- 明確區分簽約主體（Company）與配送據點（Store），提升業務清晰度
 - 支援複雜的企業客戶階層結構，滿足B2B業務需求
+- 統一定價管理在Company層級，簡化價格維護
 - 提供快速查詢和批量操作，提升營運效率
 - 完整的資料稽核軌跡，確保合規性
 
 ## 功能需求
 
-### FR-CRM-CM-001: 客戶基本資料管理
+### FR-CRM-CM-001: Company（客戶公司）管理
 **狀態**: 🟡 開發中
 
 **功能描述**:
-管理客戶的基本資料，包括客戶編號、名稱、類型、稅號、聯絡資訊等核心欄位。支援新增、修改、查詢、停用等基本操作。
+管理客戶公司層級資料，作為簽約與定價的主體。包括公司編號、名稱、統編、聯絡資訊、定價方案等核心欄位。支援新增、修改、查詢、停用等基本操作。
 
 **功能需求細節**:
 - **條件/觸發**: 當使用者在客戶管理介面點擊「新增客戶」或「編輯客戶」時
 - **行為**: 系統顯示客戶資料表單，驗證輸入資料，並儲存至資料庫
-- **資料輸入**: 客戶名稱(必填)、統一編號(選填)、客戶類型、聯絡電話、地址、Email、營業類別
-- **資料輸出**: 客戶編號(系統自動產生)、建立時間、更新時間、資料完整性狀態
+- **資料輸入**: 公司名稱(必填)、統一編號(必填)、公司地址、聯絡電話、Email、營業類別、定價方案、付款條件、信用額度
+- **資料輸出**: 公司編號(系統自動產生)、建立時間、更新時間、資料完整性狀態、所屬門市數量
 - **UI反應**: 表單驗證即時回饋、儲存成功提示、錯誤訊息顯示
 - **例外處理**: 重複統編檢查、必填欄位驗證、格式驗證錯誤提示
 - **優先級**: P0
@@ -85,19 +92,19 @@
 
 ---
 
-### FR-CRM-CM-002: 客戶階層關係管理
+### FR-CRM-CM-002: Store（客戶據點）管理
 **狀態**: 🟡 開發中
 
 **功能描述**:
-管理企業客戶的組織階層關係，支援總公司-分公司-門市三層結構。提供階層關係的建立、修改、查詢功能。
+管理客戶公司旗下的配送據點或門市，作為物流配送的目的地。每個Store必須隸屬於一個Company，儲存收貨地址、配送時段、特殊要求等物流相關資訊。
 
 **功能需求細節**:
-- **條件/觸發**: 當使用者選擇「設定上層組織」或「新增下層組織」時
-- **行為**: 系統建立或更新客戶間的階層關係，並維護關係樹狀結構
-- **資料輸入**: 上層組織ID、關係類型(總公司/分公司/門市)、生效日期
-- **資料輸出**: 完整組織樹、階層路徑、關係數量統計
-- **UI反應**: 樹狀結構視覺化顯示、拖放操作回饋、關係線連接
-- **例外處理**: 循環關係檢測、超過三層限制警告、孤立節點提示
+- **條件/觸發**: 當使用者在Company詳情頁選擇「新增門市」或編輯Store資料時
+- **行為**: 系統建立或更新Store資料，自動關聯到所屬Company
+- **資料輸入**: 門市名稱(必填)、所屬公司ID(company_id)、收貨地址、配送時段、收貨聯絡人、配送注意事項、GPS座標
+- **資料輸出**: 門市編號、完整地址、配送時段設定、狀態
+- **UI反應**: 地圖選點、時段設定器、地址自動完成
+- **例外處理**: 重複地址檢查、配送時段衝突檢測、必須先有Company才能建Store
 - **優先級**: P0
 
 **用戶故事**:
@@ -107,21 +114,21 @@
 
 **驗收標準**:
 ```yaml
-- 條件: 設定有效的上下層關係
-  預期結果: 系統成功建立關係並更新組織樹
+- 條件: 為Company新增Store
+  預期結果: 系統成功建立Store並關聯到Company
   
-- 條件: 嘗試建立循環關係(A->B->C->A)
-  預期結果: 系統拒絕並顯示「不允許循環關係」錯誤
+- 條件: 嘗試為不存在的Company建立Store
+  預期結果: 系統顯示「找不到所屬公司」錯誤
   
-- 條件: 嘗試建立超過三層的關係
-  預期結果: 系統提示「已達最大層級限制」警告
+- 條件: 輸入重複的Store地址
+  預期結果: 系統提示「此地址已存在」警告
 ```
 
 **技術需求**:
-- **API 端點**: `POST /api/v1/customers/{id}/relationships`
+- **API 端點**: `POST /api/v1/companies/{company_id}/stores`, `PUT /api/v1/stores/{id}`
 - **請求/回應**: 詳見API規格章節
-- **數據模型**: customer_relationships表
-- **權限要求**: customer:manage_hierarchy
+- **數據模型**: stores表，外鍵關聯companies表
+- **權限要求**: store:create, store:update
 - **認證方式**: JWT Token
 
 **追蹤資訊**:
@@ -131,7 +138,48 @@
 
 ---
 
-### FR-CRM-CM-003: 客戶資料查詢與篩選
+### FR-CRM-CM-003: Unit（營運單位）管理
+**狀態**: 🟡 開發中
+
+**功能描述**:
+管理實際下單的營運單位。目前階段Unit與Company一對一對應，作為訂單的客戶識別主體。未來可擴展支援一個Company多個Unit的場景。
+
+**功能需求細節**:
+- **條件/觸發**: 當建立Company時自動建立對應Unit，或手動管理Unit
+- **行為**: 系統維護Unit與Company的關聯，確保訂單正確關聯到營運單位
+- **資料輸入**: 單位名稱、所屬公司ID、單位類型、授權範圍
+- **資料輸出**: 單位編號(unit_id)、關聯訂單數、營運狀態
+- **UI反應**: Unit選擇器、Company-Unit關聯視圖
+- **例外處理**: 確保每個Company至少有一個Unit
+- **優先級**: P0
+
+**驗收標準**:
+```yaml
+- 條件: 建立Company時
+  預期結果: 系統自動建立對應的預設Unit
+  
+- 條件: 查詢Unit的訂單
+  預期結果: 系統返回該Unit的所有訂單
+  
+- 條件: 停用Unit
+  預期結果: 系統檢查是否有進行中訂單並警告
+```
+
+**技術需求**:
+- **API 端點**: `GET /api/v1/units`, `POST /api/v1/companies/{company_id}/units`
+- **請求/回應**: 詳見API規格章節
+- **數據模型**: units表，關聯companies表
+- **權限要求**: unit:read, unit:create
+- **認證方式**: JWT Token
+
+**追蹤資訊**:
+- **Tests**: `tests/unit/FR-CRM-CM-003.test.ts`
+- **Code**: `src/modules/crm/customer/unit/`
+- **TOC**: `TOC Modules.md` 第69行
+
+---
+
+### FR-CRM-CM-004: 客戶資料查詢與篩選
 **狀態**: 🟡 開發中
 
 **功能描述**:
@@ -172,7 +220,48 @@
 
 ---
 
-### FR-CRM-CM-004: 客戶資料匯入匯出
+### FR-CRM-CM-005: Company-Store-Unit 階層關係管理
+**狀態**: 🟡 開發中
+
+**功能描述**:
+管理和視覺化Company、Store、Unit的完整階層關係。提供樹狀結構查看、關係驗證、階層導覽等功能。
+
+**功能需求細節**:
+- **條件/觸發**: 當使用者查看客戶詳情或需要選擇客戶時
+- **行為**: 系統展示Company-Store-Unit的完整階層結構
+- **資料輸入**: Company ID、篩選條件
+- **資料輸出**: 階層樹狀結構、Store列表、Unit關聯
+- **UI反應**: 可展開/收合的樹狀視圖、視覺化關係圖
+- **例外處理**: 孤立Store檢測、無Unit的Company警告
+- **優先級**: P0
+
+**驗收標準**:
+```yaml
+- 條件: 查看Company階層
+  預期結果: 顯示Company下所有Stores和關聯Units
+  
+- 條件: 選擇下單客戶
+  預期結果: 先選Unit，再選擇配送Store
+  
+- 條件: 刪除Company
+  預期結果: 系統檢查並提示相關Stores和Units
+```
+
+**技術需求**:
+- **API 端點**: `GET /api/v1/companies/{id}/hierarchy`
+- **請求/回應**: 詳見API規格章節
+- **數據模型**: 關聯查詢companies、stores、units表
+- **權限要求**: customer:read
+- **認證方式**: JWT Token
+
+**追蹤資訊**:
+- **Tests**: `tests/unit/FR-CRM-CM-005.test.ts`
+- **Code**: `src/modules/crm/customer/hierarchy/`
+- **TOC**: `TOC Modules.md` 第69行
+
+---
+
+### FR-CRM-CM-006: 客戶資料匯入匯出
 **狀態**: ⚪ 規劃中
 
 **功能描述**:
@@ -201,7 +290,7 @@
 
 ---
 
-### FR-CRM-CM-005: 客戶資料稽核軌跡
+### FR-CRM-CM-007: 客戶資料稽核軌跡
 **狀態**: ⚪ 規劃中
 
 **功能描述**:
@@ -250,28 +339,81 @@
 
 ### 主要實體
 ```typescript
-interface Customer {
-  id: string;                    // UUID
-  customer_code: string;         // 客戶編號
-  customer_name: string;         // 客戶名稱
-  customer_type: CustomerType;   // 客戶類型
-  tax_id?: string;              // 統一編號
-  status: CustomerStatus;        // 狀態
-  contact_person?: string;       // 聯絡人
-  contact_phone?: string;        // 聯絡電話
+// Company - 客戶公司（簽約與定價主體）
+interface Company {
+  id: string;                    // UUID (company_id)
+  company_code: string;          // 公司編號
+  company_name: string;          // 公司名稱
+  unicode?: string;              // 統一編號
+  status: CompanyStatus;         // 狀態
+  company_address?: Address;     // 公司地址
+  company_phone?: string;        // 公司電話
   contact_email?: string;        // Email
-  address?: Address;            // 地址
   business_category?: string;    // 營業類別
-  credit_limit?: number;        // 信用額度
-  payment_terms?: string;       // 付款條件
-  parent_id?: string;           // 上層組織ID
-  hierarchy_level: number;      // 階層等級(1-3)
+  
+  // 財務與定價資訊
+  pricing_set?: string;          // 定價方案代號
+  payment_terms?: string;        // 付款條件
+  credit_limit?: number;         // 信用額度
+  settlement_day?: number;       // 結帳日
+  
+  // 關聯
+  parent_enterprise?: string;    // 母公司ID (if applicable)
+  stores?: Store[];             // 下屬門市列表
+  units?: Unit[];               // 關聯營運單位
+  
+  // 系統欄位
   metadata?: JsonObject;        // 擴充欄位
   created_by: string;           // 建立者
   updated_by: string;           // 更新者
   created_at: Date;             // 建立時間
   updated_at: Date;             // 更新時間
   deleted_at?: Date;            // 軟刪除時間
+}
+
+// Store - 客戶據點/門市（物流配送單位）
+interface Store {
+  id: string;                    // UUID (store_id)
+  store_code: string;            // 門市編號
+  store_name: string;            // 門市名稱
+  company_id: string;            // 所屬公司ID (外鍵)
+  status: StoreStatus;           // 狀態
+  
+  // 物流資訊
+  store_address: Address;        // 收貨地址
+  zipcode?: string;             // 郵遞區號
+  delivery_window?: {           // 配送時段
+    start_time_weekday: string;
+    end_time_weekday: string;
+    start_time_weekend: string;
+    end_time_weekend: string;
+  };
+  instruction_for_driver?: string; // 司機配送注意事項
+  
+  // 聯絡資訊
+  contact_person?: string;       // 收貨聯絡人
+  contact_phone?: string;        // 聯絡電話
+  
+  // 系統欄位
+  created_at: Date;
+  updated_at: Date;
+}
+
+// Unit - 營運單位（實際下單主體）
+interface Unit {
+  id: string;                    // UUID (unit_id)
+  unit_code: string;             // 單位編號
+  unit_name: string;             // 單位名稱
+  company_id: string;            // 關聯公司ID
+  status: UnitStatus;            // 狀態
+  
+  // 營運資訊
+  unit_type: 'default' | 'department' | 'subsidiary'; // 單位類型
+  authorization_scope?: string[];  // 授權範圍
+  
+  // 系統欄位
+  created_at: Date;
+  updated_at: Date;
 }
 
 enum CustomerType {
@@ -303,23 +445,22 @@ interface Address {
 
 ### 資料庫結構
 ```sql
--- 客戶主檔表
-CREATE TABLE customers (
+-- Company表（客戶公司）
+CREATE TABLE companies (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  customer_code VARCHAR(20) UNIQUE NOT NULL,
-  customer_name VARCHAR(100) NOT NULL,
-  customer_type VARCHAR(20) NOT NULL,
-  tax_id VARCHAR(20) UNIQUE,
+  company_code VARCHAR(20) UNIQUE NOT NULL,
+  company_name VARCHAR(100) NOT NULL,
+  unicode VARCHAR(20) UNIQUE,  -- 統一編號
   status VARCHAR(20) NOT NULL DEFAULT 'active',
-  contact_person VARCHAR(50),
-  contact_phone VARCHAR(20),
+  company_address JSONB,
+  company_phone VARCHAR(20),
   contact_email VARCHAR(100),
-  address JSONB,
   business_category VARCHAR(50),
-  credit_limit DECIMAL(15,2),
+  pricing_set VARCHAR(50),      -- 定價方案
   payment_terms VARCHAR(50),
-  parent_id UUID REFERENCES customers(id),
-  hierarchy_level INTEGER NOT NULL DEFAULT 1,
+  credit_limit DECIMAL(15,2),
+  settlement_day INTEGER,
+  parent_enterprise UUID,       -- 母公司ID
   metadata JSONB,
   created_by UUID NOT NULL,
   updated_by UUID NOT NULL,
@@ -328,34 +469,73 @@ CREATE TABLE customers (
   deleted_at TIMESTAMP,
   
   -- 索引
-  INDEX idx_customer_code (customer_code),
-  INDEX idx_customer_name (customer_name),
-  INDEX idx_tax_id (tax_id),
-  INDEX idx_parent_id (parent_id),
+  INDEX idx_company_code (company_code),
+  INDEX idx_company_name (company_name),
+  INDEX idx_unicode (unicode),
   INDEX idx_status (status),
   INDEX idx_created_at (created_at)
 );
 
--- 客戶關係表
-CREATE TABLE customer_relationships (
+-- Store表（客戶據點/門市）
+CREATE TABLE stores (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  parent_customer_id UUID NOT NULL REFERENCES customers(id),
-  child_customer_id UUID NOT NULL REFERENCES customers(id),
+  store_code VARCHAR(20) UNIQUE NOT NULL,
+  store_name VARCHAR(100) NOT NULL,
+  company_id UUID NOT NULL REFERENCES companies(id),  -- 所屬公司
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
+  store_address JSONB NOT NULL,
+  zipcode VARCHAR(10),
+  delivery_window JSONB,        -- 配送時段設定
+  instruction_for_driver TEXT,
+  contact_person VARCHAR(50),
+  contact_phone VARCHAR(20),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  
+  -- 索引
+  INDEX idx_store_code (store_code),
+  INDEX idx_company_id (company_id),
+  INDEX idx_status (status)
+);
+
+-- Unit表（營運單位）
+CREATE TABLE units (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  unit_code VARCHAR(20) UNIQUE NOT NULL,
+  unit_name VARCHAR(100) NOT NULL,
+  company_id UUID NOT NULL REFERENCES companies(id),
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
+  unit_type VARCHAR(20) NOT NULL DEFAULT 'default',
+  authorization_scope JSONB,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  
+  -- 索引
+  INDEX idx_unit_code (unit_code),
+  INDEX idx_unit_company (company_id)
+);
+
+-- 客戶關係表（保留用於Company間關係）
+CREATE TABLE company_relationships (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  parent_company_id UUID NOT NULL REFERENCES companies(id),
+  child_company_id UUID NOT NULL REFERENCES companies(id),
   relationship_type VARCHAR(20) NOT NULL,
   effective_date DATE NOT NULL,
   end_date DATE,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
   
-  UNIQUE(parent_customer_id, child_customer_id),
-  INDEX idx_parent (parent_customer_id),
-  INDEX idx_child (child_customer_id)
+  UNIQUE(parent_company_id, child_company_id),
+  INDEX idx_parent (parent_company_id),
+  INDEX idx_child (child_company_id)
 );
 
--- 客戶稽核軌跡表
+-- 客戶稽核軌跡表（統一記錄Company/Store/Unit變更）
 CREATE TABLE customer_audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  customer_id UUID NOT NULL REFERENCES customers(id),
+  entity_type VARCHAR(20) NOT NULL,  -- 'company', 'store', 'unit'
+  entity_id UUID NOT NULL,
   action VARCHAR(20) NOT NULL, -- CREATE, UPDATE, DELETE
   field_name VARCHAR(50),
   old_value TEXT,
@@ -365,7 +545,7 @@ CREATE TABLE customer_audit_logs (
   ip_address VARCHAR(45),
   user_agent TEXT,
   
-  INDEX idx_customer_id (customer_id),
+  INDEX idx_entity (entity_type, entity_id),
   INDEX idx_changed_at (changed_at),
   INDEX idx_changed_by (changed_by)
 );
@@ -376,32 +556,33 @@ CREATE TABLE customer_audit_logs (
 ### API 端點列表
 | 方法 | 端點 | 描述 | 狀態 |
 |------|------|------|------|
-| GET | `/api/v1/customers` | 獲取客戶列表 | 🟡 開發中 |
-| GET | `/api/v1/customers/{id}` | 獲取客戶詳情 | 🟡 開發中 |
-| POST | `/api/v1/customers` | 創建客戶 | 🟡 開發中 |
-| PUT | `/api/v1/customers/{id}` | 更新客戶 | 🟡 開發中 |
-| DELETE | `/api/v1/customers/{id}` | 刪除客戶 | ⚪ 規劃中 |
-| GET | `/api/v1/customers/search` | 搜尋客戶 | 🟡 開發中 |
+| GET | `/api/v1/companies` | 獲取公司列表 | 🟡 開發中 |
+| GET | `/api/v1/companies/{id}` | 獲取公司詳情 | 🟡 開發中 |
+| POST | `/api/v1/companies` | 創建公司 | 🟡 開發中 |
+| PUT | `/api/v1/companies/{id}` | 更新公司 | 🟡 開發中 |
+| DELETE | `/api/v1/companies/{id}` | 刪除公司 | ⚪ 規劃中 |
+| GET | `/api/v1/companies/{id}/stores` | 獲取公司門市 | 🟡 開發中 |
+| POST | `/api/v1/companies/{id}/stores` | 新增門市 | 🟡 開發中 |
+| GET | `/api/v1/stores/{id}` | 獲取門市詳情 | 🟡 開發中 |
+| PUT | `/api/v1/stores/{id}` | 更新門市 | 🟡 開發中 |
+| GET | `/api/v1/units` | 獲取營運單位列表 | 🟡 開發中 |
+| GET | `/api/v1/companies/{id}/hierarchy` | 獲取完整階層 | 🟡 開發中 |
 | POST | `/api/v1/customers/import` | 匯入客戶 | ⚪ 規劃中 |
 | GET | `/api/v1/customers/export` | 匯出客戶 | ⚪ 規劃中 |
-| GET | `/api/v1/customers/{id}/hierarchy` | 獲取組織階層 | ⚪ 規劃中 |
-| POST | `/api/v1/customers/{id}/relationships` | 建立關係 | ⚪ 規劃中 |
-| GET | `/api/v1/customers/{id}/audit-logs` | 查詢稽核記錄 | ⚪ 規劃中 |
+| GET | `/api/v1/audit-logs` | 查詢稽核記錄 | ⚪ 規劃中 |
 
 ### 請求/響應範例
 
-#### 創建客戶
+#### 創建Company（客戶公司）
 ```json
 // 請求
-POST /api/v1/customers
+POST /api/v1/companies
 {
-  "customer_name": "測試企業股份有限公司",
-  "customer_type": "enterprise",
-  "tax_id": "12345678",
-  "contact_person": "王經理",
-  "contact_phone": "02-1234-5678",
+  "company_name": "測試企業股份有限公司",
+  "unicode": "12345678",
+  "company_phone": "02-1234-5678",
   "contact_email": "manager@test.com",
-  "address": {
+  "company_address": {
     "country": "台灣",
     "city": "台北市",
     "district": "信義區",
@@ -409,8 +590,10 @@ POST /api/v1/customers
     "street": "信義路五段7號"
   },
   "business_category": "製造業",
+  "pricing_set": "PRICE_SET_A",
   "credit_limit": 1000000,
-  "payment_terms": "月結30天"
+  "payment_terms": "月結30天",
+  "settlement_day": 25
 }
 
 // 成功響應 (201 Created)
@@ -418,12 +601,11 @@ POST /api/v1/customers
   "success": true,
   "data": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
-    "customer_code": "CUST-2025-0001",
-    "customer_name": "測試企業股份有限公司",
-    "customer_type": "enterprise",
-    "tax_id": "12345678",
+    "company_code": "COMP-2025-0001",
+    "company_name": "測試企業股份有限公司",
+    "unicode": "12345678",
     "status": "active",
-    "hierarchy_level": 1,
+    "unit_id": "550e8400-e29b-41d4-a716-446655440001",  // 自動建立的預設Unit
     "created_at": "2025-08-21T10:00:00Z",
     "updated_at": "2025-08-21T10:00:00Z"
   }
@@ -553,6 +735,7 @@ GET /api/v1/customers?page=1&limit=20&status=active&keyword=測試
 | 版本 | 日期 | 變更內容 | 變更人 |
 |------|------|----------|--------|
 | v1.0.0 | 2025-08-21 | 初始版本，建立完整PRD | 系統 |
+| v2.0.0 | 2025-08-24 | 重構為Company/Store/Unit三層架構 | 系統 |
 
 ---
 

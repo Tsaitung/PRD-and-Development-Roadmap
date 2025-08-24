@@ -197,7 +197,7 @@ CREATE TABLE item_costs (
 ### 4. 客戶管理 (Customer Relationship Management)
 
 ```sql
--- 客戶主檔
+-- 客戶管理 (Customer Management)
 CREATE TABLE customers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_code VARCHAR(30) UNIQUE NOT NULL,

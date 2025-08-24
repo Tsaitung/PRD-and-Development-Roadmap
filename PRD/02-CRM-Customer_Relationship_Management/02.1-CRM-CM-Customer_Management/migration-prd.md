@@ -11,7 +11,7 @@
 
 ## 模組資訊
 - **模組代碼**: CRM-CM
-- **模組名稱**: 客戶主檔管理 (Customer Master Management)
+- **模組名稱**: 客戶管理 (Customer Management)
 - **負責人**: [待指派]
 - **版本**: v1.0.0-migration
 

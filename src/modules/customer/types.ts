@@ -139,6 +139,51 @@ export type PaymentMethod =
 
 export type ChurnRisk = 'low' | 'medium' | 'high' | 'churned';
 
+// Migration helpers - map old Customer to new Company/Store/Unit
+export function migrateCustomerToCompany(customer: Customer): Company {
+  return {
+    id: customer.id,
+    companyCode: customer.customerCode,
+    companyName: customer.customerName,
+    companyNameEn: customer.customerNameEn,
+    unicode: customer.taxId,
+    status: customer.status as CompanyStatus,
+    companyAddress: customer.billingAddress,
+    companyPhone: customer.primaryContact?.phone,
+    contactEmail: customer.primaryContact?.email,
+    businessCategory: customer.industry,
+    businessLicense: customer.businessLicense,
+    establishedDate: customer.establishedDate,
+    pricingSet: customer.pricingTier,
+    paymentTerms: customer.paymentTerms,
+    creditLimit: customer.creditLimit,
+    creditUsed: customer.creditUsed,
+    currency: customer.currency,
+    tags: customer.tags,
+    customFields: customer.customFields,
+    notes: customer.notes,
+    createdBy: customer.createdBy,
+    createdAt: customer.createdAt,
+    updatedAt: customer.updatedAt
+  };
+}
+
+export function createDefaultUnit(company: Company): Unit {
+  return {
+    id: `unit-${company.id}`,
+    unitCode: `UNIT-${company.companyCode}`,
+    unitName: company.companyName,
+    companyId: company.id,
+    status: UnitStatus.ACTIVE,
+    unitType: 'default',
+    canPlaceOrders: true,
+    orderApprovalRequired: false,
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+}
+
 export interface CustomerCredit {
   id: string;
   customerId: string;
@@ -411,4 +456,227 @@ export interface CreditAdjustmentRequest {
   expiryDate?: Date;
   reason: string;
   approvedBy?: string;
+}
+
+// ==================== Company/Store/Unit Architecture ====================
+
+// Company (客戶公司) - 簽約與定價主體
+export interface Company {
+  id: string;
+  companyCode: string;
+  companyName: string;
+  companyNameEn?: string;
+  unicode?: string; // 統一編號
+  status: CompanyStatus;
+  
+  // Contact & Address
+  companyAddress?: Address;
+  companyPhone?: string;
+  contactEmail?: string;
+  contactPerson?: ContactPerson;
+  
+  // Business Information
+  businessCategory?: string;
+  businessLicense?: string;
+  establishedDate?: Date;
+  annualRevenue?: number;
+  employeeCount?: number;
+  
+  // Pricing & Payment
+  pricingSet?: string;
+  paymentTerms?: PaymentTerms | { terms: string };
+  creditLimit?: number;
+  creditUsed?: number;
+  settlementDay?: number; // 每月結算日
+  currency?: string;
+  
+  // Metadata
+  tags?: string[];
+  customFields?: Record<string, any>;
+  notes?: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  
+  // Relations
+  stores?: Store[];
+  units?: Unit[];
+}
+
+// Store (客戶據點/門市) - 物流配送單位
+export interface Store {
+  id: string;
+  storeCode: string;
+  storeName: string;
+  companyId: string; // Foreign key to Company
+  status: StoreStatus;
+  
+  // Location
+  storeAddress: Address;
+  zipcode?: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
+  
+  // Delivery Information
+  deliveryWindow?: DeliveryWindow;
+  instructionForDriver?: string;
+  receivingHours?: OperatingHours;
+  blackoutDates?: Date[];
+  
+  // Contact
+  contactPerson?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  
+  // Operations
+  storeType?: 'retail' | 'warehouse' | 'office' | 'restaurant' | 'other';
+  operatingHours?: OperatingHours;
+  capacity?: {
+    maxDailyDeliveries?: number;
+    storageCapacity?: number;
+  };
+  
+  // Status
+  isActive: boolean;
+  activatedAt?: Date;
+  deactivatedAt?: Date;
+  deactivationReason?: string;
+  
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Unit (營運單位) - 實際下單主體
+export interface Unit {
+  id: string;
+  unitCode: string;
+  unitName: string;
+  companyId: string; // Foreign key to Company
+  status: UnitStatus;
+  
+  // Unit Configuration
+  unitType: 'default' | 'department' | 'subsidiary' | 'branch';
+  parentUnitId?: string; // For hierarchical units
+  
+  // Ordering Permissions
+  canPlaceOrders: boolean;
+  orderApprovalRequired: boolean;
+  maxOrderAmount?: number;
+  allowedOrderTypes?: string[];
+  authorizationScope?: string[];
+  
+  // Billing
+  separateBilling?: boolean;
+  billingAddress?: Address;
+  billingContact?: ContactPerson;
+  
+  // Status & Metadata
+  isActive: boolean;
+  activatedAt?: Date;
+  deactivatedAt?: Date;
+  notes?: string;
+  
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Enums for Company/Store/Unit
+export enum CompanyStatus {
+  PROSPECT = 'prospect',
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  SUSPENDED = 'suspended',
+  BLACKLISTED = 'blacklisted'
+}
+
+export enum StoreStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  TEMPORARILY_CLOSED = 'temporarily_closed',
+  PERMANENTLY_CLOSED = 'permanently_closed'
+}
+
+export enum UnitStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  SUSPENDED = 'suspended'
+}
+
+// Supporting Types
+export interface DeliveryWindow {
+  weekday?: {
+    startTime: string; // HH:mm format
+    endTime: string;
+  };
+  weekend?: {
+    startTime: string;
+    endTime: string;
+  };
+  customSchedule?: Array<{
+    dayOfWeek: number; // 0-6
+    startTime: string;
+    endTime: string;
+  }>;
+}
+
+export interface OperatingHours {
+  monday?: { open: string; close: string; };
+  tuesday?: { open: string; close: string; };
+  wednesday?: { open: string; close: string; };
+  thursday?: { open: string; close: string; };
+  friday?: { open: string; close: string; };
+  saturday?: { open: string; close: string; };
+  sunday?: { open: string; close: string; };
+}
+
+// Hierarchy Structure
+export interface CompanyHierarchy {
+  company: Company;
+  stores: Store[];
+  units: Unit[];
+}
+
+// Request DTOs for Company/Store/Unit
+export interface CreateCompanyRequest {
+  companyName: string;
+  unicode?: string;
+  companyAddress?: Address;
+  companyPhone?: string;
+  contactEmail?: string;
+  businessCategory?: string;
+  pricingSet?: string;
+  paymentTerms?: string;
+  creditLimit?: number;
+  settlementDay?: number;
+  createDefaultUnit?: boolean; // Auto-create default unit
+  tags?: string[];
+  notes?: string;
+  createdBy?: string;
+}
+
+export interface CreateStoreRequest {
+  storeName: string;
+  companyId?: string; // Will be provided in path parameter
+  storeAddress: Address;
+  zipcode?: string;
+  deliveryWindow?: DeliveryWindow;
+  contactPerson?: string;
+  contactPhone?: string;
+  instructionForDriver?: string;
+  storeType?: string;
+  operatingHours?: OperatingHours;
+}
+
+export interface CreateUnitRequest {
+  unitName: string;
+  companyId: string;
+  unitType?: 'default' | 'department' | 'subsidiary' | 'branch';
+  canPlaceOrders?: boolean;
+  orderApprovalRequired?: boolean;
+  maxOrderAmount?: number;
+  authorizationScope?: string[];
+  billingAddress?: Address;
+  notes?: string;
 }

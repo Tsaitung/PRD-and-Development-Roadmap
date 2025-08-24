@@ -65,8 +65,8 @@
 | 整合測試 | 🔴 | 未開始 |
 | 錯誤追蹤 | - | 無相關 issues |
 | 上線進度 | 45% | Dashboard 基礎框架已完成 |
-### 2. [CRM] Customer Relationship Management (CRM) 客戶管理
-    2.1. [CRM-CM] Customer Master 客戶主檔
+### 2. [CRM] Customer Relationship Management (CRM) 客戶關係管理
+    2.1. [CRM-CM] Customer Management 客戶管理
     2.2. [CRM-CS] Customer Segmentation 客戶級距 / 分群
     2.3. [CRM-PM] Pricing Management 定價(標單)管理
         2.3.1. [CRM-PM-DBPE] Dynamic Base Pricing Engine 動態基礎訂價引擎
@@ -328,7 +328,7 @@
 
 ### 資料夾命名規則：
 - **主要模組**：`01-DSH-Dashboard`、`02-CRM-Customer_Relationship_Management` 等
-- **子模組**：`01.1-DSH-OV-Dashboard_Overview`、`02.1-CRM-CM-Customer_Master` 等
+- **子模組**：`01.1-DSH-OV-Dashboard_Overview`、`02.1-CRM-CM-Customer_Management` 等
 - **子子模組**：`02.3.1-CRM-PM-DBPE-Dynamic_Base_Pricing_Engine` 等
 - **詳細功能**：`02.3.1a-CRM-PM-DBPE-CBC-Cost_Benchmark_Classification` 等
 

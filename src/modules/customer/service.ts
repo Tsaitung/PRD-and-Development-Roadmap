@@ -10,9 +10,398 @@ import {
   UpdateCustomerRequest,
   CustomerFilter,
   CreditAdjustmentRequest,
-  CustomerTier
+  CustomerTier,
+  // New Company/Store/Unit types
+  Company,
+  Store,
+  Unit,
+  CompanyStatus,
+  StoreStatus,
+  UnitStatus,
+  CompanyHierarchy,
+  CreateCompanyRequest,
+  CreateStoreRequest,
+  CreateUnitRequest,
+  createDefaultUnit
 } from './types';
 
+// Company/Store/Unit Service Class
+export class CustomerService {
+  // Company Management
+  async createCompany(request: CreateCompanyRequest & { createdBy?: string }): Promise<Company & { units?: Unit[] }> {
+    const client = await getClient();
+    
+    try {
+      await client.query('BEGIN');
+
+      // Check for duplicate unicode (統一編號)
+      if (request.unicode) {
+        const existing = await client.query(
+          'SELECT company_id FROM companies WHERE unicode = $1',
+          [request.unicode]
+        );
+        
+        if (existing.rows.length > 0) {
+          throw new AppError('統一編號已存在', 400);
+        }
+      }
+
+      // Generate company code
+      const companyCode = await this.generateCompanyCode();
+
+      // Create company record
+      const companyResult = await client.query(
+        `INSERT INTO companies 
+         (company_code, company_name, unicode, status,
+          company_address, company_phone, contact_email,
+          business_category, pricing_set, payment_terms,
+          credit_limit, settlement_day, created_by, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
+         RETURNING *`,
+        [
+          companyCode,
+          request.companyName,
+          request.unicode,
+          CompanyStatus.ACTIVE,
+          JSON.stringify(request.companyAddress),
+          request.companyPhone,
+          request.contactEmail,
+          request.businessCategory,
+          request.pricingSet,
+          request.paymentTerms,
+          request.creditLimit || 0,
+          request.settlementDay,
+          request.createdBy || 'system'
+        ]
+      );
+
+      const company = companyResult.rows[0];
+      const units: Unit[] = [];
+
+      // Auto-create default unit if requested
+      if (request.createDefaultUnit) {
+        const defaultUnit = createDefaultUnit(company);
+        const unitResult = await client.query(
+          `INSERT INTO units 
+           (unit_code, unit_name, company_id, status, unit_type,
+            can_place_orders, order_approval_required, is_active,
+            created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+           RETURNING *`,
+          [
+            defaultUnit.unitCode,
+            defaultUnit.unitName,
+            company.company_id,
+            UnitStatus.ACTIVE,
+            'default',
+            true,
+            false,
+            true
+          ]
+        );
+        units.push(unitResult.rows[0]);
+      }
+
+      await client.query('COMMIT');
+
+      // Clear cache
+      await cache.del('companies:list');
+
+      return { ...company, units };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  // Store Management
+  async createStore(companyId: string, request: CreateStoreRequest): Promise<Store> {
+    const client = await getClient();
+    
+    try {
+      await client.query('BEGIN');
+
+      // Verify company exists
+      const companyResult = await client.query(
+        'SELECT company_id FROM companies WHERE company_id = $1',
+        [companyId]
+      );
+
+      if (companyResult.rows.length === 0) {
+        throw new AppError('Company not found', 404);
+      }
+
+      // Check for duplicate address
+      if (request.storeAddress) {
+        const addressStr = JSON.stringify(request.storeAddress);
+        const duplicateResult = await client.query(
+          'SELECT store_id FROM stores WHERE store_address = $1',
+          [addressStr]
+        );
+
+        if (duplicateResult.rows.length > 0) {
+          throw new AppError('此地址已存在', 400);
+        }
+      }
+
+      // Generate store code
+      const storeCode = await this.generateStoreCode();
+
+      // Create store
+      const storeResult = await client.query(
+        `INSERT INTO stores 
+         (store_code, store_name, company_id, status,
+          store_address, zipcode, delivery_window,
+          contact_person, contact_phone, instruction_for_driver,
+          is_active, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+         RETURNING *`,
+        [
+          storeCode,
+          request.storeName,
+          companyId,
+          StoreStatus.ACTIVE,
+          JSON.stringify(request.storeAddress),
+          request.zipcode,
+          JSON.stringify(request.deliveryWindow),
+          request.contactPerson,
+          request.contactPhone,
+          request.instructionForDriver,
+          true
+        ]
+      );
+
+      await client.query('COMMIT');
+
+      return storeResult.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  // Unit Management
+  async createUnit(request: CreateUnitRequest): Promise<Unit> {
+    const client = await getClient();
+    
+    try {
+      await client.query('BEGIN');
+
+      // Verify company exists
+      const companyResult = await client.query(
+        'SELECT company_id FROM companies WHERE company_id = $1',
+        [request.companyId]
+      );
+
+      if (companyResult.rows.length === 0) {
+        throw new AppError('Company not found', 404);
+      }
+
+      // Generate unit code
+      const unitCode = await this.generateUnitCode();
+
+      // Create unit
+      const unitResult = await client.query(
+        `INSERT INTO units 
+         (unit_code, unit_name, company_id, status, unit_type,
+          authorization_scope, can_place_orders, order_approval_required,
+          max_order_amount, is_active, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+         RETURNING *`,
+        [
+          unitCode,
+          request.unitName,
+          request.companyId,
+          UnitStatus.ACTIVE,
+          request.unitType || 'default',
+          JSON.stringify(request.authorizationScope),
+          request.canPlaceOrders !== false,
+          request.maxOrderAmount ? true : false,
+          request.maxOrderAmount,
+          true
+        ]
+      );
+
+      await client.query('COMMIT');
+
+      return unitResult.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  // Hierarchy Query
+  async getCompanyHierarchy(companyId: string): Promise<CompanyHierarchy> {
+    // Get company
+    const companyResult = await query(
+      'SELECT * FROM companies WHERE company_id = $1',
+      [companyId]
+    );
+
+    if (companyResult.rows.length === 0) {
+      throw new AppError('Company not found', 404);
+    }
+
+    // Get stores
+    const storesResult = await query(
+      'SELECT * FROM stores WHERE company_id = $1 ORDER BY store_name',
+      [companyId]
+    );
+
+    // Get units
+    const unitsResult = await query(
+      'SELECT * FROM units WHERE company_id = $1 ORDER BY unit_name',
+      [companyId]
+    );
+
+    return {
+      company: companyResult.rows[0],
+      stores: storesResult.rows,
+      units: unitsResult.rows
+    };
+  }
+
+  // Get stores by company
+  async getStoresByCompanyId(companyId: string): Promise<Store[]> {
+    const result = await query(
+      'SELECT * FROM stores WHERE company_id = $1 ORDER BY store_name',
+      [companyId]
+    );
+    return result.rows;
+  }
+
+  // Get units by company
+  async getUnitsByCompanyId(companyId: string): Promise<Unit[]> {
+    const result = await query(
+      'SELECT * FROM units WHERE company_id = $1 ORDER BY unit_name',
+      [companyId]
+    );
+    return result.rows;
+  }
+
+  // Validate Unit-Store relationship
+  async validateUnitStoreRelation(unitId: string, storeId: string): Promise<boolean> {
+    const result = await query(
+      `SELECT 1 FROM units u
+       JOIN stores s ON u.company_id = s.company_id
+       WHERE u.unit_id = $1 AND s.store_id = $2`,
+      [unitId, storeId]
+    );
+    
+    if (result.rows.length === 0) {
+      throw new AppError('Store does not belong to the same company as Unit', 400);
+    }
+    
+    return true;
+  }
+
+  // Delete company (with validation)
+  async deleteCompany(companyId: string): Promise<void> {
+    const client = await getClient();
+    
+    try {
+      await client.query('BEGIN');
+
+      // Check for existing stores
+      const storesResult = await client.query(
+        'SELECT COUNT(*) as count FROM stores WHERE company_id = $1',
+        [companyId]
+      );
+
+      // Check for existing units
+      const unitsResult = await client.query(
+        'SELECT COUNT(*) as count FROM units WHERE company_id = $1',
+        [companyId]
+      );
+
+      if (parseInt(storesResult.rows[0].count) > 0 || parseInt(unitsResult.rows[0].count) > 0) {
+        throw new AppError('Cannot delete company with existing stores or units', 400);
+      }
+
+      // Delete company
+      await client.query(
+        'DELETE FROM companies WHERE company_id = $1',
+        [companyId]
+      );
+
+      await client.query('COMMIT');
+
+      // Clear cache
+      await cache.del(`company:${companyId}`);
+      await cache.del('companies:list');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  // Helper methods
+  private async generateCompanyCode(): Promise<string> {
+    const date = new Date();
+    const year = date.getFullYear();
+    
+    const countResult = await query(
+      `SELECT COUNT(*) + 1 as seq 
+       FROM companies 
+       WHERE company_code LIKE $1`,
+      [`COMP-${year}-%`]
+    );
+    
+    const seq = String(countResult.rows[0].seq).padStart(4, '0');
+    return `COMP-${year}-${seq}`;
+  }
+
+  private async generateStoreCode(): Promise<string> {
+    const date = new Date();
+    const year = date.getFullYear();
+    
+    const countResult = await query(
+      `SELECT COUNT(*) + 1 as seq 
+       FROM stores 
+       WHERE store_code LIKE $1`,
+      [`STORE-${year}-%`]
+    );
+    
+    const seq = String(countResult.rows[0].seq).padStart(4, '0');
+    return `STORE-${year}-${seq}`;
+  }
+
+  private async generateUnitCode(): Promise<string> {
+    const date = new Date();
+    const year = date.getFullYear();
+    
+    const countResult = await query(
+      `SELECT COUNT(*) + 1 as seq 
+       FROM units 
+       WHERE unit_code LIKE $1`,
+      [`UNIT-${year}-%`]
+    );
+    
+    const seq = String(countResult.rows[0].seq).padStart(4, '0');
+    return `UNIT-${year}-${seq}`;
+  }
+
+  // Get company by ID
+  async getCompanyById(companyId: string): Promise<Company | null> {
+    const result = await query(
+      'SELECT * FROM companies WHERE company_id = $1',
+      [companyId]
+    );
+    
+    return result.rows.length > 0 ? result.rows[0] : null;
+  }
+}
+
+// Legacy functions (kept for backward compatibility)
 export const createCustomer = async (
   request: CreateCustomerRequest & { createdBy: string }
 ): Promise<Customer> => {
