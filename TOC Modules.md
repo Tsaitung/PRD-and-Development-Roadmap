@@ -67,7 +67,7 @@
 | 上線進度 | 45% | Dashboard 基礎框架已完成 |
 ### 2. [CRM] Customer Relationship Management (CRM) 客戶關係管理
     2.1. [CRM-CM] Customer Management 客戶管理
-    2.2. [CRM-CS] Customer Segmentation 客戶級距 / 分群
+    2.2. [CRM-CS] Customer Segmentation 客戶級距 / 分群 ⚪
     2.3. [CRM-PM] Pricing Management 定價(標單)管理
         2.3.1. [CRM-PM-DBPE] Dynamic Base Pricing Engine 動態基礎訂價引擎
             2.3.1a. [CRM-PM-DBPE-CBC] Cost Benchmark Classification 成本對標分類設定
