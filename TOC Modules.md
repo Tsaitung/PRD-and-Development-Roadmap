@@ -267,10 +267,10 @@
 | 新系統更新 | 🟡 | 未開始 |
 | PRD完成度 | ✅ | 規劃中 |
 | 系統整合 | 🟡 | 未開始 |
-| 單元測試 | 🔴 | 未開始 |
+| 單元測試 | ✅ | 未開始 |
 | 整合測試 | 🔴 | 未開始 |
 | 錯誤追蹤 | - | 無相關 issues |
-| 上線進度 | 45% | 未開始 |
+| 上線進度 | 60% | 未開始 |
 ### 12. [BI] Analytics & Business Intelligence (BI) 分析 & BI
     12.1. [BI-DF] Demand Forecasting 需求預測
     12.2. [BI-PIK] Production & Inventory KPI 生產 & 庫存 KPI
