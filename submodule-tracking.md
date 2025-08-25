@@ -37,7 +37,7 @@
 ### 2. [CRM] Customer Relationship Management - 7個子模組（含13個子項）
 | 子模組 | 名稱 | 狀態 | PRD | 舊系統 | 轉移 | 備註 |
 |--------|------|------|-----|--------|------|------|
-| CRM-CM | Customer Master | 🔴 | ⚪ | ✅ | ⏸️ | 待轉移 |
+| CRM-CM | Customer Management | 🔴 | ⚪ | ✅ | ⏸️ | 待轉移 |
 | CRM-CS | Customer Segmentation | 🔴 | ⚪ | ✅ | ⏸️ | 待轉移 |
 | CRM-PM | Pricing Management | 🔴 | ⚪ | ✅ | ⏸️ | 有13個子項 |
 | CRM-CSCM | Customer Service & Complaint | 🔴 | ⚪ | ✅ | ⏸️ | 待轉移 |
