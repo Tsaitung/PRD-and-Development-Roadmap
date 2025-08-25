@@ -1,0 +1,414 @@
+name: 🧪 Automated Testing Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'requirements.txt'
+      - 'package.json'
+      - 'pytest.ini'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+  schedule:
+    # 每天凌晨 3 點執行完整測試
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      test_scope:
+        description: 'Test scope to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - unit
+          - integration
+          - e2e
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+  PYTEST_WORKERS: 4
+
+jobs:
+  # ==================== 程式碼品質檢查 ====================
+  code-quality:
+    name: 📝 Code Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: 📦 Install linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black isort mypy pylint
+          
+      - name: 🔍 Run flake8
+        run: flake8 src tests --config=.flake8
+        continue-on-error: true
+        
+      - name: 🎨 Check code formatting with Black
+        run: black --check src tests
+        continue-on-error: true
+        
+      - name: 📚 Check import sorting with isort
+        run: isort --check-only src tests
+        continue-on-error: true
+        
+      - name: 🔎 Type checking with mypy
+        run: mypy src
+        continue-on-error: true
+
+  # ==================== 單元測試 ====================
+  unit-tests:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
+    
+    strategy:
+      matrix:
+        module: [dsh, crm, om, wms, mes, bdm, im, fa, pm, lm]
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-xdist pytest-html pytest-timeout
+          
+      - name: 🧪 Run unit tests for ${{ matrix.module }}
+        run: |
+          pytest tests/unit/${{ matrix.module }} \
+            -v \
+            --cov=src/modules/${{ matrix.module }} \
+            --cov-report=xml \
+            --cov-report=html \
+            --cov-report=term \
+            --junit-xml=test-results/${{ matrix.module }}-unit.xml \
+            --html=test-reports/${{ matrix.module }}-unit.html \
+            --self-contained-html \
+            -n ${{ env.PYTEST_WORKERS }}
+        continue-on-error: true
+        
+      - name: 📊 Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests-${{ matrix.module }}
+          name: ${{ matrix.module }}-coverage
+          
+      - name: 📁 Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results-${{ matrix.module }}
+          path: |
+            test-results/
+            test-reports/
+            htmlcov/
+
+  # ==================== 整合測試 ====================
+  integration-tests:
+    name: 🔗 Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_erp
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          npm ci
+          
+      - name: 🗄️ Run database migrations
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_erp
+        run: |
+          python manage.py migrate
+          
+      - name: 🔗 Run integration tests
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_erp
+          REDIS_URL: redis://localhost:6379/0
+        run: |
+          pytest tests/integration \
+            -v \
+            --cov=src \
+            --cov-report=xml \
+            --junit-xml=test-results/integration.xml \
+            --html=test-reports/integration.html \
+            --self-contained-html \
+            --timeout=60
+        continue-on-error: true
+        
+      - name: 📊 Upload integration test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: integration-test-results
+          path: |
+            test-results/
+            test-reports/
+
+  # ==================== E2E 測試 ====================
+  e2e-tests:
+    name: 🎯 E2E Tests
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📦 Install Playwright
+        run: |
+          npm ci
+          npx playwright install --with-deps
+          
+      - name: 🚀 Start application
+        run: |
+          docker-compose -f docker-compose.test.yml up -d
+          sleep 30  # 等待服務啟動
+          
+      - name: 🎯 Run E2E tests
+        run: |
+          npx playwright test tests/e2e \
+            --reporter=html \
+            --reporter=junit \
+            --output=test-results/e2e
+        continue-on-error: true
+        
+      - name: 📊 Upload E2E test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: e2e-test-results
+          path: |
+            test-results/
+            playwright-report/
+            
+      - name: 🧹 Cleanup
+        if: always()
+        run: docker-compose -f docker-compose.test.yml down
+
+  # ==================== 測試報告彙總 ====================
+  test-summary:
+    name: 📊 Test Summary Report
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, e2e-tests]
+    if: always()
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📥 Download all test results
+        uses: actions/download-artifact@v3
+        with:
+          path: all-test-results/
+          
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: 📊 Generate test summary
+        run: |
+          python .github/scripts/generate_test_summary.py \
+            --input-dir=all-test-results \
+            --output-file=test-summary.md
+            
+      - name: 💬 Comment PR with test results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('test-summary.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+            
+      - name: 📈 Update test badge
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # 更新 README 中的測試覆蓋率徽章
+          python .github/scripts/update_badges.py
+          
+      - name: 📁 Upload final test report
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-summary
+          path: test-summary.md
+
+  # ==================== 效能測試 (選擇性) ====================
+  performance-tests:
+    name: ⚡ Performance Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.test_scope == 'all'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: 📦 Install performance testing tools
+        run: |
+          pip install locust pytest-benchmark
+          
+      - name: ⚡ Run performance tests
+        run: |
+          locust -f tests/performance/locustfile.py \
+            --headless \
+            --users 100 \
+            --spawn-rate 10 \
+            --run-time 5m \
+            --html performance-report.html
+            
+      - name: 📊 Upload performance results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-test-results
+          path: performance-report.html
+
+  # ==================== 安全掃描 ====================
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: 🔍 Run Bandit security scan
+        run: |
+          pip install bandit
+          bandit -r src -f json -o bandit-report.json
+        continue-on-error: true
+        
+      - name: 🔍 Run Safety check
+        run: |
+          pip install safety
+          safety check --json > safety-report.json
+        continue-on-error: true
+        
+      - name: 📊 Upload security reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            safety-report.json
+
+# ==================== 通知設定 ====================
+  notify:
+    name: 📢 Send Notifications
+    runs-on: ubuntu-latest
+    needs: [test-summary]
+    if: always()
+    
+    steps:
+      - name: 📧 Send email notification
+        if: failure()
+        run: echo "Send failure notification"
+        
+      - name: 💬 Send Slack notification
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "Test Pipeline Result: ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Test Pipeline Completed*\n*Result:* ${{ job.status }}\n*Branch:* ${{ github.ref }}\n*Commit:* ${{ github.sha }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
