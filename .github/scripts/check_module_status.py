@@ -89,8 +89,11 @@ class ModuleStatusChecker:
         
         # 檢查 src 目錄
         if self.src_dir.exists():
-            for ext in ['*.tsx', '*.ts']:
-                module_files.extend(self.src_dir.rglob(f"*{module_code.lower()}*{ext}"))
+            # 分別搜尋 .tsx 和 .ts 檔案
+            for ext in ['.tsx', '.ts']:
+                # 使用正確的 glob 模式
+                pattern = f"**/*{module_code.lower()}*{ext}"
+                module_files.extend(self.src_dir.glob(pattern))
         
         # 檢查是否有實作檔案
         if not module_files:
