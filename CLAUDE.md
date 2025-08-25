@@ -10,8 +10,8 @@ This is the 菜蟲農食 ERP System - a comprehensive Enterprise Resource Planni
 
 ### Sync with GitHub
 ```bash
-./quick_sync.sh                    # Quick sync for small changes
-./sync_with_github.sh             # Full sync with conflict resolution
+./enhanced_auto_sync.sh           # Enhanced auto sync with MPM updates
+./enhanced_auto_sync.sh --watch   # Watch mode for continuous sync
 ```
 
 ### Update Progress Tracking
@@ -51,6 +51,22 @@ The system uses a modular architecture with 14 main modules identified by abbrev
 1. **TOC Modules.md** - Central tracking document containing the Module Progress Matrix with all modules, submodules, and their implementation status
 2. **IMPLEMENTATION_PLAN.md** - Development roadmap and architectural decisions
 3. **.github/workflows/mpm-automation.yml** - Main automation pipeline that orchestrates all progress tracking
+4. **README.md** - Main project overview with current status
+5. **CLAUDE.md** - This file, the single source of truth for AI instructions
+
+### Repository Structure (After 2025-08-25 Cleanup)
+
+All historical documents have been archived to `/docs/history/`:
+- `archived_modules/` - Contains incorrect module versions (05-OP-Operational, 12-BI-Business_Intelligence)
+- `archived_prd_versions/` - Contains old PRD versions (migration-prd.md, prd_v1.md files)
+- `progress_reports/` - Contains all weekly summaries and progress reports
+- `backup_20250817/` - Old backup directory
+
+**Current clean structure:**
+- One module per number (no duplicates)
+- Single PRD file per module (consolidated from v2 versions)
+- Main tracking in TOC Modules.md
+- Context in README.md and CLAUDE.md only
 
 ### Dashboard System
 

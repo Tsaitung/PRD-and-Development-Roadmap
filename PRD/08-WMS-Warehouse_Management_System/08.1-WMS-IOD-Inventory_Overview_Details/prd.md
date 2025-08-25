@@ -1,555 +1,736 @@
-# 庫存總覽與明細 PRD 文件
+# WMS-IOD 庫存概況/明細 (Inventory Overview/Details) PRD
 
-## 模組資訊
-- **模組代碼**: 08.1-WMS-IOD
-- **模組名稱**: Inventory Overview & Details (庫存總覽與明細)
-- **負責人**: 菜蟲農食 ERP 團隊
-- **最後更新**: 2025-08-22
-- **版本**: v1.0.0
+## 文件資訊
+- **版本**: v2.0.0
+- **最後更新**: 2025-08-25
+- **狀態**: ⚪ 規劃中
+- **負責人**: 待指派
+- **相關模組**: OM (訂單), MES (生產), PM (採購)
 
-## 模組概述
-庫存總覽與明細模組是倉儲管理系統的核心，提供即時庫存狀態監控、多維度庫存查詢、批號追蹤、以及庫存預警功能。支援農產品特殊的有效期管理和批次管理需求。
+## 1. 功能概述
 
-## 業務價值
-- 提供即時準確的庫存資訊，降低庫存成本30%
-- 減少過期損耗，提升庫存周轉率
-- 支援多倉庫、多批次的精細化管理
-- 預警機制降低缺貨風險95%
+### 1.1 目的
+提供即時、準確的庫存資訊管理系統，支援多倉庫、多據點的庫存查詢、追蹤、分析，確保供應鏈效率最佳化。
 
-## 功能需求
+### 1.2 範圍
+- 即時庫存查詢與監控
+- 多維度庫存分析
+- 庫存預警與異常管理
+- 批號與效期追蹤
+- 庫存週轉率分析
 
-### FR-WMS-IOD-001: 即時庫存總覽
+### 1.3 關鍵價值
+- 降低庫存成本 25%
+- 提升庫存準確率至 99.5%
+- 減少缺貨率 40%
+- 加快庫存週轉 30%
+
+## 2. 功能性需求
+
+### FR-WMS-IOD-001: 即時庫存查詢
 **狀態**: 🔴 未開始
 **優先級**: P0
 
-**功能描述**:
-展示全公司或特定倉庫的即時庫存總覽，包括總庫存價值、庫存分類統計、周轉率、庫齡分析等關鍵指標。
+#### 需求描述
+- **條件/觸發**: 用戶查詢庫存資訊時
+- **行為**: 系統提供多維度即時庫存查詢，支援複雜篩選條件
+- **資料輸入**: 
+  - 查詢條件（品項、倉庫、批號、狀態等）
+  - 顯示選項（庫存層級、時間範圍）
+  - 排序與分組設定
+- **資料輸出**: 
+  - 即時庫存數量（可用/預留/在途/凍結）
+  - 庫存分布（倉庫/儲位）
+  - 批號明細
+  - 效期資訊
+  - 最後異動記錄
+- **UI反應**: 
+  - 即時數據更新（WebSocket）
+  - 庫存狀態色彩標示
+  - 多層級展開檢視
+  - 快速篩選工具列
+- **例外處理**: 
+  - 查無資料提示
+  - 權限不足限制顯示
+  - 網路斷線快取機制
+- **效能要求**: 查詢回應 < 500ms
 
-**功能需求細節**:
-- **條件/觸發**: 當用戶訪問庫存總覽頁面或設定篩選條件時
-- **行為**: 系統即時計算並展示庫存統計數據，支援倉庫、類別、狀態等多維度篩選
-- **資料輸入**: 倉庫選擇、日期範圍、品項類別、庫存狀態篩選
-- **資料輸出**: 總庫存量、總庫存價值、分類統計、周轉率、庫齡分布圖表
-- **UI反應**: 載入動畫、數據卡片展示、圖表互動、篩選器即時更新
-- **例外處理**: 無權限倉庫隱藏、計算超時提示、數據異常警告
-
-**用戶故事**:
-作為倉庫管理員，
-我希望即時查看各倉庫的庫存狀況，
-以便做出調撥和採購決策。
-
-**驗收標準**:
+#### 驗收標準
 ```yaml
-- 條件: 用戶選擇特定倉庫
-  預期結果: 2秒內顯示該倉庫的即時庫存統計
-  
-- 條件: 切換日期範圍篩選
-  預期結果: 即時更新庫齡分析和周轉率數據
-  
-- 條件: 庫存數據異常（如負庫存）
-  預期結果: 顯示紅色警告標記並列出異常項目
+- 條件: 查詢單一品項跨10個倉庫的庫存
+  預期結果: 0.5秒內顯示所有倉庫的即時庫存狀態
+
+- 條件: 查詢即將到期（30天內）的所有批號
+  預期結果: 列出所有相關批號並依到期日排序
+
+- 條件: 多用戶同時查詢相同品項
+  預期結果: 所有用戶看到一致的庫存數據
 ```
 
-**技術需求**:
-- **API 端點**: `GET /api/v1/inventory/overview`
-- **請求/回應**: 詳見API規格章節
-- **數據模型**: InventorySnapshot, InventoryMetrics
-- **權限要求**: inventory.view
-- **認證方式**: JWT Token
-
-**追蹤資訊**:
-- **Tests**: 
-  - 單元測試: `tests/unit/FR-WMS-IOD-001.test.ts`
-  - 整合測試: `tests/integration/FR-WMS-IOD-001.integration.test.ts`
-  - E2E測試: `tests/e2e/FR-WMS-IOD-001.e2e.test.ts`
-- **Code**: `src/modules/wms/inventory/overview/`
-- **TOC**: `TOC Modules.md` 第194行
-
-**依賴關係**:
-- **依賴模組**: BDM (單位轉換), IM (品項主檔)
-- **依賴功能**: FR-BDM-UCONV-001, FR-IM-IM-001
-- **外部服務**: Redis 快取服務
-
----
-
-### FR-WMS-IOD-002: 庫存明細查詢
+### FR-WMS-IOD-002: 庫存分析儀表板
 **狀態**: 🔴 未開始
 **優先級**: P0
 
-**功能描述**:
-提供詳細的庫存明細查詢功能，支援按品項、批號、儲位、有效期等多維度查詢，並支援匯出功能。
+#### 需求描述
+- **條件/觸發**: 進入庫存管理首頁或定時更新
+- **行為**: 顯示關鍵庫存指標的視覺化儀表板
+- **資料輸入**: 
+  - 分析維度（時間、類別、倉庫）
+  - 指標選擇
+  - 比較基準
+- **資料輸出**: 
+  - 庫存總值與趨勢
+  - ABC分類分析
+  - 庫存週轉率
+  - 缺貨/過剩清單
+  - 庫齡分析
+  - Top 10 異動品項
+- **UI反應**: 
+  - 互動式圖表（可點擊深入）
+  - 即時數據重新整理
+  - 自訂儀表板配置
+  - 匯出報表功能
+- **例外處理**: 
+  - 資料不足時顯示說明
+  - 計算錯誤自動修正
+  - 歷史資料缺失處理
 
-**功能需求細節**:
-- **條件/觸發**: 當用戶執行庫存查詢或掃描條碼時
-- **行為**: 系統根據查詢條件返回詳細庫存記錄，支援分頁和排序
-- **資料輸入**: 品項編號/名稱、批號、儲位、有效期範圍、庫存狀態
-- **資料輸出**: 庫存明細列表、可用量、在途量、預留量、儲位資訊
-- **UI反應**: 搜尋自動完成、結果高亮、懶加載、匯出進度條
-- **例外處理**: 查無資料提示、查詢超時處理、匯出檔案過大警告
-
-**用戶故事**:
-作為採購人員，
-我希望查詢特定品項的詳細庫存狀況，
-以便決定是否需要補貨。
-
-**驗收標準**:
+#### 驗收標準
 ```yaml
-- 條件: 輸入品項名稱關鍵字
-  預期結果: 顯示模糊匹配的品項列表供選擇
-  
-- 條件: 查詢結果超過1000筆
-  預期結果: 自動分頁顯示，每頁50筆
-  
-- 條件: 點擊匯出Excel
-  預期結果: 生成包含所有欄位的Excel檔案
+- 條件: 查看月度庫存週轉率趨勢
+  預期結果: 顯示過去12個月的週轉率變化圖表
+
+- 條件: ABC分類分析
+  預期結果: 自動將品項分為A(20%)、B(30%)、C(50%)類
+
+- 條件: 設定自訂KPI儀表板
+  預期結果: 保存用戶配置，下次登入自動載入
 ```
-
-**技術需求**:
-- **API 端點**: 
-  - `GET /api/v1/inventory/details`
-  - `POST /api/v1/inventory/export`
-- **請求/回應**: 詳見API規格章節
-- **數據模型**: InventoryDetail, BatchInfo, LocationInfo
-- **權限要求**: inventory.view, inventory.export
-- **認證方式**: JWT Token
-
-**追蹤資訊**:
-- **Tests**: 
-  - 單元測試: `tests/unit/FR-WMS-IOD-002.test.ts`
-  - 整合測試: `tests/integration/FR-WMS-IOD-002.integration.test.ts`
-  - E2E測試: `tests/e2e/FR-WMS-IOD-002.e2e.test.ts`
-- **Code**: `src/modules/wms/inventory/details/`
-- **TOC**: `TOC Modules.md` 第194行
-
-**依賴關係**:
-- **依賴模組**: IM (品項資訊), WMS-BTM (批號管理)
-- **依賴功能**: FR-IM-IM-001, FR-WMS-BTM-001
-- **外部服務**: ElasticSearch 搜尋引擎
-
----
 
 ### FR-WMS-IOD-003: 庫存預警管理
 **狀態**: 🔴 未開始
 **優先級**: P0
 
-**功能描述**:
-設定和管理庫存預警規則，包括安全庫存、最高庫存、有效期預警等，並支援自動通知相關人員。
+#### 需求描述
+- **條件/觸發**: 
+  - 庫存低於安全存量
+  - 庫存超過最大存量
+  - 批號即將到期
+  - 呆滯料超過設定天數
+- **行為**: 系統自動監控並發送預警通知
+- **資料輸入**: 
+  - 預警規則設定
+  - 通知對象與方式
+  - 預警閾值
+  - 檢查頻率
+- **資料輸出**: 
+  - 預警清單
+  - 建議處理方案
+  - 預警歷史記錄
+  - 處理狀態追蹤
+- **UI反應**: 
+  - 彈出通知
+  - 預警標記（紅黃綠燈）
+  - 預警統計面板
+  - 一鍵處理功能
+- **例外處理**: 
+  - 重複預警合併
+  - 誤報自動排除
+  - 預警升級機制
 
-**功能需求細節**:
-- **條件/觸發**: 當庫存水位觸及預設閾值或系統定時檢查時
-- **行為**: 系統自動檢測並發送預警通知，記錄預警歷史
-- **資料輸入**: 品項選擇、預警類型、閾值設定、通知對象、檢查頻率
-- **資料輸出**: 預警列表、預警趨勢、處理狀態、通知記錄
-- **UI反應**: 預警標記顏色（紅黃綠）、彈出通知、聲音提醒
-- **例外處理**: 重複預警合併、預警升級機制、通知失敗重試
-
-**用戶故事**:
-作為倉庫主管，
-我希望系統自動監控庫存水位並及時預警，
-以便預防缺貨或過期損失。
-
-**驗收標準**:
-```yaml
-- 條件: 庫存低於安全庫存
-  預期結果: 立即發送預警通知給指定人員
-  
-- 條件: 產品有效期剩餘7天
-  預期結果: 標記為黃色預警並每日提醒
-  
-- 條件: 連續3天未處理預警
-  預期結果: 自動升級通知主管
+#### 預警類型定義
+```typescript
+enum AlertType {
+  LOW_STOCK = 'low_stock',           // 低庫存
+  OVERSTOCK = 'overstock',           // 過剩庫存
+  EXPIRING = 'expiring',             // 即將到期
+  EXPIRED = 'expired',               // 已過期
+  SLOW_MOVING = 'slow_moving',       // 呆滯料
+  DISCREPANCY = 'discrepancy',       // 帳實不符
+  ABNORMAL = 'abnormal'              // 異常變動
+}
 ```
-
-**技術需求**:
-- **API 端點**: 
-  - `GET /api/v1/inventory/alerts`
-  - `POST /api/v1/inventory/alert-rules`
-  - `PUT /api/v1/inventory/alerts/{id}/acknowledge`
-- **請求/回應**: 詳見API規格章節
-- **數據模型**: AlertRule, InventoryAlert, AlertHistory
-- **權限要求**: inventory.alert.view, inventory.alert.manage
-- **認證方式**: JWT Token
-
-**追蹤資訊**:
-- **Tests**: 
-  - 單元測試: `tests/unit/FR-WMS-IOD-003.test.ts`
-  - 整合測試: `tests/integration/FR-WMS-IOD-003.integration.test.ts`
-  - E2E測試: `tests/e2e/FR-WMS-IOD-003.e2e.test.ts`
-- **Code**: `src/modules/wms/inventory/alerts/`
-- **TOC**: `TOC Modules.md` 第194行
-
-**依賴關係**:
-- **依賴模組**: DSH-NC (通知中心), SA-NWS (通知設定)
-- **依賴功能**: FR-DSH-NC-001, FR-SA-NWS-001
-- **外部服務**: 排程服務(Cron), Email/SMS服務
-
----
 
 ### FR-WMS-IOD-004: 批號與效期管理
 **狀態**: 🔴 未開始
-**優先級**: P0
+**優先級**: P1
 
-**功能描述**:
-管理農產品的批號資訊和有效期，支援FIFO/FEFO出貨策略，追蹤批號的完整生命週期。
+#### 需求描述
+- **條件/觸發**: 需要追蹤批號或管理效期商品時
+- **行為**: 提供完整的批號生命週期管理和效期追蹤
+- **資料輸入**: 
+  - 批號資訊（生產日期、效期、供應商）
+  - FIFO/FEFO規則設定
+  - 效期預警天數
+- **資料輸出**: 
+  - 批號族譜（來源追溯）
+  - 效期日曆視圖
+  - 批號使用記錄
+  - 過期處理建議
+- **UI反應**: 
+  - 批號時間軸顯示
+  - 效期顏色標示
+  - 批號快速搜尋
+  - 掃碼查詢支援
+- **例外處理**: 
+  - 批號重複檢測
+  - 效期邏輯驗證
+  - 追溯斷鏈處理
 
-**功能需求細節**:
-- **條件/觸發**: 當入庫登記批號或執行出貨分配時
-- **行為**: 系統自動分配批號、計算有效期、執行出貨策略
-- **資料輸入**: 批號、生產日期、有效期、供應商批號、品質等級
-- **資料輸出**: 批號清單、效期分布、即將到期清單、批號追蹤記錄
-- **UI反應**: 效期顏色標示、到期倒數顯示、批號自動建議
-- **例外處理**: 批號重複檢查、效期異常警告、強制使用確認
-
-**用戶故事**:
-作為品管人員，
-我希望追蹤每個批號的完整履歷，
-以便在品質問題時快速追溯。
-
-**驗收標準**:
-```yaml
-- 條件: 新品入庫登記
-  預期結果: 自動生成唯一批號並計算有效期
-  
-- 條件: 執行FEFO出貨
-  預期結果: 優先分配最早到期的批次
-  
-- 條件: 查詢批號履歷
-  預期結果: 顯示完整的入出庫記錄和品質檢驗記錄
-```
-
-**技術需求**:
-- **API 端點**: 
-  - `POST /api/v1/inventory/batches`
-  - `GET /api/v1/inventory/batches/{batchNo}`
-  - `GET /api/v1/inventory/expiry-report`
-- **請求/回應**: 詳見API規格章節
-- **數據模型**: Batch, ExpiryInfo, BatchHistory
-- **權限要求**: inventory.batch.manage
-- **認證方式**: JWT Token
-
-**追蹤資訊**:
-- **Tests**: 
-  - 單元測試: `tests/unit/FR-WMS-IOD-004.test.ts`
-  - 整合測試: `tests/integration/FR-WMS-IOD-004.integration.test.ts`
-  - E2E測試: `tests/e2e/FR-WMS-IOD-004.e2e.test.ts`
-- **Code**: `src/modules/wms/inventory/batch/`
-- **TOC**: `TOC Modules.md` 第196行
-
-**依賴關係**:
-- **依賴模組**: WMS-BTM (批號主檔), MES (生產批號)
-- **依賴功能**: FR-WMS-BTM-001, FR-MES-MBU-001
-- **外部服務**: 無
-
----
-
-### FR-WMS-IOD-005: 多倉庫庫存調撥
+### FR-WMS-IOD-005: 庫存盤點支援
 **狀態**: 🔴 未開始
 **優先級**: P1
 
-**功能描述**:
-支援多倉庫間的庫存調撥申請、審核和執行，包括調撥建議和成本計算。
+#### 需求描述
+- **條件/觸發**: 執行定期或臨時盤點作業時
+- **行為**: 支援多種盤點模式，自動產生盤點差異分析
+- **資料輸入**: 
+  - 盤點計畫（範圍、時間、人員）
+  - 實際盤點數量
+  - 差異原因說明
+  - 調整審批
+- **資料輸出**: 
+  - 盤點工作單
+  - 差異報告
+  - 調整單據
+  - 盤點績效分析
+- **UI反應**: 
+  - 盤點進度顯示
+  - 差異即時計算
+  - 行動裝置支援
+  - 語音輸入功能
+- **例外處理**: 
+  - 盤點中斷恢復
+  - 重複盤點防止
+  - 差異異常提醒
 
-**功能需求細節**:
-- **條件/觸發**: 當發起調撥申請或系統檢測到庫存不平衡時
-- **行為**: 創建調撥單、執行審核流程、更新庫存、計算調撥成本
-- **資料輸入**: 來源倉庫、目標倉庫、品項清單、數量、調撥原因
-- **資料輸出**: 調撥單、審核狀態、預計到貨時間、調撥成本
-- **UI反應**: 拖放式調撥、庫存餘量即時顯示、審核流程圖
-- **例外處理**: 庫存不足提示、審核逾時提醒、調撥失敗回滾
+### FR-WMS-IOD-006: 庫存報表中心
+**狀態**: 🔴 未開始
+**優先級**: P2
 
-**用戶故事**:
-作為供應鏈經理，
-我希望優化各倉庫間的庫存分配，
-以降低整體庫存成本。
+#### 需求描述
+- **條件/觸發**: 需要生成各類庫存報表時
+- **行為**: 提供標準化和自訂的庫存報表生成功能
+- **資料輸入**: 
+  - 報表類型選擇
+  - 參數設定（日期、範圍、條件）
+  - 輸出格式（Excel/PDF/CSV）
+  - 排程設定
+- **資料輸出**: 
+  - 庫存月報/週報/日報
+  - 呆滯料分析報表
+  - 庫齡分析報表
+  - 週轉率報表
+  - 異動明細表
+- **UI反應**: 
+  - 報表模板管理
+  - 預覽功能
+  - 批次生成
+  - 郵件發送
+- **例外處理**: 
+  - 大量資料分批處理
+  - 報表生成失敗重試
+  - 格式轉換錯誤處理
 
-**驗收標準**:
-```yaml
-- 條件: 創建調撥申請
-  預期結果: 即時檢查來源庫存並預留數量
-  
-- 條件: 調撥審核通過
-  預期結果: 自動創建出入庫單據並更新庫存
-  
-- 條件: 調撥在途查詢
-  預期結果: 顯示即時位置和預計到達時間
-```
+## 3. 非功能性需求
 
-**技術需求**:
-- **API 端點**: 
-  - `POST /api/v1/inventory/transfers`
-  - `PUT /api/v1/inventory/transfers/{id}/approve`
-  - `GET /api/v1/inventory/transfers/in-transit`
-- **請求/回應**: 詳見API規格章節
-- **數據模型**: TransferOrder, TransferItem, TransferApproval
-- **權限要求**: inventory.transfer.create, inventory.transfer.approve
-- **認證方式**: JWT Token
+### 3.1 效能需求
+- **查詢效能**: 
+  - 單品查詢 < 200ms
+  - 批量查詢 < 2s（1000筆）
+  - 報表生成 < 30s
+- **並發支援**: 200個同時查詢
+- **資料量**: 支援千萬級庫存記錄
 
-**追蹤資訊**:
-- **Tests**: 
-  - 單元測試: `tests/unit/FR-WMS-IOD-005.test.ts`
-  - 整合測試: `tests/integration/FR-WMS-IOD-005.integration.test.ts`
-  - E2E測試: `tests/e2e/FR-WMS-IOD-005.e2e.test.ts`
-- **Code**: `src/modules/wms/inventory/transfer/`
-- **TOC**: `TOC Modules.md` 第197行
+### 3.2 準確性需求
+- **庫存準確率**: ≥ 99.5%
+- **即時性**: 異動後1秒內更新
+- **資料一致性**: 強一致性保證
 
-**依賴關係**:
-- **依賴模組**: LM (物流管理), FA (成本計算)
-- **依賴功能**: FR-LM-DSRO-001, FR-FA-PMAR-001
-- **外部服務**: 工作流引擎
+### 3.3 安全需求
+- **權限控制**: 基於角色的存取控制
+- **資料加密**: 敏感資料加密存儲
+- **審計追蹤**: 完整操作日誌
 
-## 非功能需求
+## 4. 系統設計
 
-### 性能需求
-- 庫存查詢響應時間：< 1秒
-- 批量匯出處理：< 10秒/萬筆
-- 即時庫存更新延遲：< 2秒
-- 並發查詢支援：500+
+### 4.1 資料模型
 
-### 安全需求
-- 庫存數據加密存儲
-- 調撥審核多級授權
-- 敏感操作日誌記錄
-- 資料存取權限分倉控管
-
-### 可用性需求
-- 系統可用性：99.95%
-- 支援離線庫存盤點
-- 自動故障切換
-- 數據備份頻率：每小時
-
-## 數據模型
-
-### 主要實體
 ```typescript
-interface InventorySnapshot {
+// 庫存主檔
+interface Inventory {
   id: string;
-  warehouseId: string;
   itemId: string;
-  quantity: number;
-  availableQty: number;
-  reservedQty: number;
-  inTransitQty: number;
+  itemCode: string;
+  itemName: string;
+  warehouseId: string;
+  locationId?: string;
+  
+  // 數量資訊
+  quantity: {
+    onHand: number;        // 現有庫存
+    available: number;     // 可用庫存
+    reserved: number;      // 預留數量
+    inTransit: number;     // 在途數量
+    frozen: number;        // 凍結數量
+    damaged: number;       // 損壞數量
+  };
+  
+  // 批號資訊
+  batchNo?: string;
+  lotNo?: string;
+  serialNo?: string;
+  
+  // 日期資訊
+  productionDate?: Date;
+  expiryDate?: Date;
+  receivedDate: Date;
+  lastMovementDate: Date;
+  
+  // 成本資訊
   unitCost: number;
   totalValue: number;
-  lastUpdated: Date;
-  batchDetails: BatchInfo[];
+  currency: string;
+  
+  // 供應商資訊
+  supplierId?: string;
+  purchaseOrderNo?: string;
+  
+  // 品質資訊
+  qualityStatus: 'passed' | 'pending' | 'failed' | 'quarantine';
+  qualityCertNo?: string;
+  
+  // 儲位資訊
+  location: {
+    zone: string;
+    rack: string;
+    shelf: string;
+    bin: string;
+  };
+  
+  // 系統資訊
+  status: InventoryStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  version: number;
 }
 
-interface BatchInfo {
-  batchNo: string;
+// 庫存異動記錄
+interface InventoryMovement {
+  id: string;
+  movementNo: string;
+  movementType: MovementType;
+  movementDate: Date;
+  
+  // 品項資訊
+  itemId: string;
+  batchNo?: string;
+  
+  // 異動資訊
+  fromWarehouse?: string;
+  toWarehouse?: string;
+  fromLocation?: string;
+  toLocation?: string;
+  
+  // 數量資訊
   quantity: number;
-  productionDate: Date;
-  expiryDate: Date;
-  qualityGrade: string;
-  supplierBatchNo?: string;
-  location: string;
-  status: 'available' | 'reserved' | 'quarantine' | 'expired';
+  beforeQty: number;
+  afterQty: number;
+  unit: string;
+  
+  // 關聯單據
+  referenceType: 'purchase' | 'sales' | 'transfer' | 'adjustment' | 'production';
+  referenceNo: string;
+  
+  // 原因說明
+  reason?: string;
+  remarks?: string;
+  
+  // 操作資訊
+  operatedBy: string;
+  approvedBy?: string;
+  createdAt: Date;
 }
 
+// 庫存預警規則
 interface InventoryAlert {
   id: string;
-  alertType: 'low_stock' | 'overstock' | 'expiry' | 'quality';
-  severity: 'critical' | 'warning' | 'info';
-  itemId: string;
-  warehouseId: string;
-  currentValue: number;
-  threshold: number;
-  message: string;
-  acknowledged: boolean;
-  acknowledgedBy?: string;
-  acknowledgedAt?: Date;
+  alertName: string;
+  alertType: AlertType;
+  status: 'active' | 'inactive';
+  
+  // 觸發條件
+  conditions: {
+    itemIds?: string[];
+    categories?: string[];
+    warehouses?: string[];
+    threshold?: {
+      type: 'quantity' | 'percentage' | 'days';
+      operator: 'gt' | 'gte' | 'lt' | 'lte' | 'eq';
+      value: number;
+    };
+  };
+  
+  // 通知設定
+  notification: {
+    channels: ('email' | 'sms' | 'system' | 'webhook')[];
+    recipients: string[];
+    frequency: 'immediate' | 'daily' | 'weekly';
+    template: string;
+  };
+  
+  // 執行記錄
+  lastTriggeredAt?: Date;
+  triggerCount: number;
+  
+  createdBy: string;
   createdAt: Date;
+  updatedAt: Date;
 }
 
-interface TransferOrder {
+// 盤點單
+interface StockCount {
   id: string;
-  transferNo: string;
-  fromWarehouseId: string;
-  toWarehouseId: string;
-  status: 'draft' | 'pending' | 'approved' | 'in_transit' | 'completed' | 'cancelled';
-  items: TransferItem[];
-  requestedBy: string;
+  countNo: string;
+  countType: 'full' | 'cycle' | 'spot';
+  status: 'planned' | 'in_progress' | 'completed' | 'cancelled';
+  
+  // 盤點範圍
+  scope: {
+    warehouses: string[];
+    categories?: string[];
+    items?: string[];
+    locations?: string[];
+  };
+  
+  // 盤點時間
+  plannedDate: Date;
+  startedAt?: Date;
+  completedAt?: Date;
+  
+  // 盤點結果
+  summary: {
+    totalItems: number;
+    countedItems: number;
+    matchedItems: number;
+    discrepancyItems: number;
+    totalVariance: number;
+    varianceValue: number;
+  };
+  
+  // 盤點明細
+  details: StockCountDetail[];
+  
+  // 審批資訊
+  countedBy: string[];
+  reviewedBy?: string;
   approvedBy?: string;
-  estimatedArrival?: Date;
-  actualArrival?: Date;
-  transferCost: number;
-  notes?: string;
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  
   createdAt: Date;
+  updatedAt: Date;
+}
+
+// 盤點明細
+interface StockCountDetail {
+  id: string;
+  countId: string;
+  itemId: string;
+  batchNo?: string;
+  locationId: string;
+  
+  // 數量資訊
+  systemQty: number;
+  countedQty: number;
+  variance: number;
+  varianceRate: number;
+  
+  // 差異處理
+  adjustmentQty?: number;
+  adjustmentReason?: string;
+  adjustmentStatus?: 'pending' | 'approved' | 'rejected';
+  
+  // 盤點資訊
+  countedAt: Date;
+  countedBy: string;
+  remarks?: string;
+}
+
+// 庫存分析指標
+interface InventoryMetrics {
+  date: Date;
+  warehouseId?: string;
+  
+  // 庫存指標
+  totalValue: number;
+  totalItems: number;
+  totalSKUs: number;
+  
+  // 週轉指標
+  turnoverRate: number;
+  turnoverDays: number;
+  stockoutRate: number;
+  overstockRate: number;
+  
+  // ABC分析
+  abcAnalysis: {
+    A: { items: number; value: number; percentage: number };
+    B: { items: number; value: number; percentage: number };
+    C: { items: number; value: number; percentage: number };
+  };
+  
+  // 庫齡分析
+  agingAnalysis: {
+    '0-30': number;
+    '31-60': number;
+    '61-90': number;
+    '91-180': number;
+    '180+': number;
+  };
+  
+  // 效率指標
+  accuracy: number;
+  fillRate: number;
+  cycleTime: number;
 }
 ```
 
-## API 設計
+### 4.2 API 設計
 
-### API 端點列表
-| 方法 | 端點 | 描述 | 狀態 |
-|------|------|------|------|
-| GET | `/api/v1/inventory/overview` | 獲取庫存總覽 | 🔴 未開始 |
-| GET | `/api/v1/inventory/details` | 查詢庫存明細 | 🔴 未開始 |
-| POST | `/api/v1/inventory/export` | 匯出庫存報表 | 🔴 未開始 |
-| GET | `/api/v1/inventory/alerts` | 獲取庫存預警 | 🔴 未開始 |
-| POST | `/api/v1/inventory/alert-rules` | 設定預警規則 | 🔴 未開始 |
-| POST | `/api/v1/inventory/batches` | 創建批號 | 🔴 未開始 |
-| GET | `/api/v1/inventory/expiry-report` | 效期報表 | 🔴 未開始 |
-| POST | `/api/v1/inventory/transfers` | 創建調撥單 | 🔴 未開始 |
+```typescript
+// 庫存查詢 API
+interface InventoryAPI {
+  // 查詢庫存
+  GET    /api/inventory
+  GET    /api/inventory/:id
+  GET    /api/inventory/item/:itemId
+  
+  // 批號查詢
+  GET    /api/inventory/batch/:batchNo
+  GET    /api/inventory/expiring
+  
+  // 庫存異動
+  POST   /api/inventory/movement
+  GET    /api/inventory/movements
+  
+  // 庫存調整
+  POST   /api/inventory/adjustment
+  
+  // 庫存轉移
+  POST   /api/inventory/transfer
+}
 
-### 請求/回應範例
+// 分析報表 API
+interface AnalyticsAPI {
+  // 儀表板
+  GET    /api/inventory/dashboard
+  
+  // 分析報表
+  GET    /api/inventory/analytics/abc
+  GET    /api/inventory/analytics/aging
+  GET    /api/inventory/analytics/turnover
+  
+  // 預警管理
+  GET    /api/inventory/alerts
+  POST   /api/inventory/alerts
+  PUT    /api/inventory/alerts/:id
+  
+  // 報表生成
+  POST   /api/inventory/reports/generate
+  GET    /api/inventory/reports/:id
+}
 
-#### 獲取庫存總覽
-```json
-// 請求
-GET /api/v1/inventory/overview?warehouseId=wh001&period=current
+// 盤點管理 API
+interface StockCountAPI {
+  // 盤點計畫
+  POST   /api/stockcount
+  GET    /api/stockcount/:id
+  
+  // 盤點執行
+  POST   /api/stockcount/:id/start
+  PUT    /api/stockcount/:id/count
+  POST   /api/stockcount/:id/complete
+  
+  // 差異處理
+  GET    /api/stockcount/:id/variances
+  POST   /api/stockcount/:id/adjust
+}
 
-// 成功響應 (200 OK)
-{
-  "success": true,
-  "data": {
-    "summary": {
-      "totalValue": 15680000,
-      "totalItems": 1250,
-      "totalSKUs": 450,
-      "averageTurnover": 12.5
-    },
-    "categories": [
-      {
-        "category": "蔬菜類",
-        "value": 5680000,
-        "quantity": 15000,
-        "percentage": 36.2
-      }
-    ],
-    "aging": {
-      "0-7days": 45,
-      "8-30days": 30,
-      "31-90days": 20,
-      "over90days": 5
-    },
-    "alerts": {
-      "critical": 3,
-      "warning": 12,
-      "info": 25
-    }
-  },
-  "timestamp": "2025-08-22T10:30:00Z"
+// WebSocket 事件
+interface InventoryWebSocketEvents {
+  // 庫存更新
+  'inventory:updated': (data: {
+    itemId: string;
+    warehouseId: string;
+    quantity: number;
+    movement: any;
+  }) => void;
+  
+  // 預警觸發
+  'alert:triggered': (alert: InventoryAlert) => void;
+  
+  // 盤點進度
+  'stockcount:progress': (progress: {
+    countId: string;
+    percentage: number;
+    status: string;
+  }) => void;
 }
 ```
 
-### 資料庫結構
-```sql
--- 庫存快照表
-CREATE TABLE inventory_snapshots (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  warehouse_id UUID NOT NULL REFERENCES warehouses(id),
-  item_id UUID NOT NULL REFERENCES items(id),
-  quantity DECIMAL(15,3) NOT NULL CHECK (quantity >= 0),
-  available_qty DECIMAL(15,3) NOT NULL,
-  reserved_qty DECIMAL(15,3) NOT NULL DEFAULT 0,
-  in_transit_qty DECIMAL(15,3) NOT NULL DEFAULT 0,
-  unit_cost DECIMAL(15,4),
-  total_value DECIMAL(15,2),
-  last_counted_at TIMESTAMP,
-  last_movement_at TIMESTAMP,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  
-  UNIQUE(warehouse_id, item_id),
-  INDEX idx_warehouse (warehouse_id),
-  INDEX idx_item (item_id),
-  INDEX idx_quantity (quantity),
-  INDEX idx_updated (updated_at)
-);
+### 4.3 系統架構圖
 
--- 批號資訊表
-CREATE TABLE batch_info (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  batch_no VARCHAR(50) UNIQUE NOT NULL,
-  item_id UUID NOT NULL REFERENCES items(id),
-  warehouse_id UUID NOT NULL REFERENCES warehouses(id),
-  quantity DECIMAL(15,3) NOT NULL,
-  production_date DATE NOT NULL,
-  expiry_date DATE,
-  quality_grade VARCHAR(10),
-  supplier_batch_no VARCHAR(50),
-  location VARCHAR(50),
-  status VARCHAR(20) NOT NULL DEFAULT 'available',
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  
-  INDEX idx_batch_no (batch_no),
-  INDEX idx_expiry (expiry_date),
-  INDEX idx_status (status)
-);
-
--- 庫存預警規則表
-CREATE TABLE inventory_alert_rules (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  item_id UUID NOT NULL REFERENCES items(id),
-  warehouse_id UUID REFERENCES warehouses(id),
-  alert_type VARCHAR(20) NOT NULL,
-  threshold_value DECIMAL(15,3) NOT NULL,
-  comparison_operator VARCHAR(10) NOT NULL,
-  notification_emails TEXT[],
-  check_frequency INTEGER DEFAULT 60,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_by UUID NOT NULL REFERENCES users(id),
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  
-  INDEX idx_item_warehouse (item_id, warehouse_id),
-  INDEX idx_active (is_active)
-);
-
--- 調撥單表
-CREATE TABLE transfer_orders (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  transfer_no VARCHAR(30) UNIQUE NOT NULL,
-  from_warehouse_id UUID NOT NULL REFERENCES warehouses(id),
-  to_warehouse_id UUID NOT NULL REFERENCES warehouses(id),
-  status VARCHAR(20) NOT NULL DEFAULT 'draft',
-  requested_by UUID NOT NULL REFERENCES users(id),
-  approved_by UUID REFERENCES users(id),
-  estimated_arrival TIMESTAMP,
-  actual_arrival TIMESTAMP,
-  transfer_cost DECIMAL(15,2),
-  notes TEXT,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  
-  INDEX idx_transfer_no (transfer_no),
-  INDEX idx_status (status),
-  INDEX idx_warehouses (from_warehouse_id, to_warehouse_id)
-);
+```mermaid
+graph TB
+    subgraph "前端層"
+        UI[庫存管理介面]
+        DASH[分析儀表板]
+        MOB[行動應用]
+    end
+    
+    subgraph "應用層"
+        API[RESTful API]
+        WS[WebSocket Server]
+        CALC[計算引擎]
+    end
+    
+    subgraph "服務層"
+        INV[庫存服務]
+        ALERT[預警服務]
+        REPORT[報表服務]
+        SYNC[同步服務]
+    end
+    
+    subgraph "資料層"
+        DB[(PostgreSQL)]
+        CACHE[(Redis)]
+        TS[(TimeSeries DB)]
+        QUEUE[Message Queue]
+    end
+    
+    subgraph "整合層"
+        OM[訂單系統]
+        MES[生產系統]
+        PM[採購系統]
+        ERP[ERP系統]
+    end
+    
+    UI --> API
+    DASH --> API
+    MOB --> API
+    
+    API --> INV
+    API --> ALERT
+    API --> REPORT
+    WS --> SYNC
+    
+    INV --> DB
+    INV --> CACHE
+    ALERT --> QUEUE
+    REPORT --> TS
+    
+    SYNC --> OM
+    SYNC --> MES
+    SYNC --> PM
+    SYNC --> ERP
 ```
 
-## 實施計畫
+## 5. 整合需求
 
-### 開發階段
-| 階段 | 時程 | 交付物 |
-|------|------|--------|
-| 階段1：基礎架構 | Week 1 | 資料模型、API框架 |
-| 階段2：核心功能 | Week 2-3 | 庫存查詢、批號管理 |
-| 階段3：預警系統 | Week 4 | 預警規則、通知機制 |
-| 階段4：調撥功能 | Week 5 | 調撥流程、審核機制 |
-| 階段5：測試優化 | Week 6 | 整合測試、性能優化 |
+### 5.1 內部系統整合
+- **OM-OL**: 訂單預留庫存
+- **OM-COSR**: 訂單扣減庫存
+- **MES-PSWO**: 生產領料與入庫
+- **PM-PODM**: 採購入庫
+- **FA-AR**: 庫存成本核算
 
-### 里程碑
-- [ ] M1：基礎庫存查詢功能 - 2025-09-05
-- [ ] M2：批號與效期管理完成 - 2025-09-12
-- [ ] M3：預警系統上線 - 2025-09-19
-- [ ] M4：調撥功能完成 - 2025-09-26
-- [ ] M5：全模組整合測試通過 - 2025-10-03
+### 5.2 外部系統整合
+- **條碼系統**: 掃碼出入庫
+- **RFID系統**: 自動盤點
+- **WMS設備**: 自動倉儲
+- **IoT感測器**: 環境監控
 
-## 風險評估
-| 風險項目 | 可能性 | 影響 | 緩解措施 |
-|----------|--------|------|----------|
-| 資料遷移複雜 | 高 | 高 | 分階段遷移、保留雙軌運行 |
-| 即時性能要求高 | 中 | 高 | 使用快取、讀寫分離架構 |
-| 批號追溯需求變更 | 中 | 中 | 預留擴展欄位、模組化設計 |
-| 多倉庫同步延遲 | 低 | 高 | 使用消息隊列、最終一致性 |
+## 6. 測試需求
 
-## 變更記錄
-| 版本 | 日期 | 變更內容 | 變更人 |
-|------|------|----------|--------|
-| v1.0.0 | 2025-08-22 | 初始版本創建 | ERP Team |
+### 6.1 功能測試
+```typescript
+describe('庫存查詢功能', () => {
+  test('應正確返回即時庫存數據', async () => {
+    // 測試即時查詢
+  });
+  
+  test('應正確計算可用庫存', async () => {
+    // 測試可用庫存 = 現有 - 預留 - 凍結
+  });
+  
+  test('應支援批號追溯', async () => {
+    // 測試批號查詢
+  });
+});
+```
+
+### 6.2 效能測試
+- 10萬SKU查詢測試
+- 並發200用戶壓力測試
+- 報表生成效能測試
+
+### 6.3 準確性測試
+- 庫存計算準確性
+- 併發異動一致性
+- 盤點差異計算
+
+## 7. 實施計劃
+
+### 7.1 開發階段
+1. **Phase 1** (Week 1-2): 基礎查詢功能
+2. **Phase 2** (Week 3-4): 預警與分析
+3. **Phase 3** (Week 5-6): 盤點功能
+4. **Phase 4** (Week 7-8): 報表與整合
+
+### 7.2 關鍵里程碑
+- M1: 基礎功能上線
+- M2: 預警系統啟用
+- M3: 全面整合完成
+- M4: 效能優化完成
+
+## 8. 風險評估
+
+| 風險項目 | 影響 | 機率 | 緩解措施 |
+|---------|------|------|----------|
+| 資料遷移複雜 | 高 | 中 | 分批遷移，建立回滾機制 |
+| 即時性要求高 | 高 | 高 | 採用快取和消息隊列 |
+| 整合點眾多 | 中 | 高 | 標準化介面，分階段整合 |
+
+## 9. 成功指標
+
+### 9.1 業務指標
+- 庫存準確率 ≥ 99.5%
+- 庫存週轉率提升 30%
+- 缺貨率降低 40%
+- 呆滯料減少 50%
+
+### 9.2 系統指標
+- 查詢響應時間 < 500ms
+- 系統可用性 ≥ 99.9%
+- 資料完整性 100%
+- 用戶滿意度 ≥ 85%
+
+## 10. 相關文件
+
+- [WMS 總體架構](../README.md)
+- [批號管理 PRD](../08.3-WMS-BTM-Batch_Traceability/prd.md)
+- [庫存調整 PRD](../08.4-WMS-IAT-Inventory_Adjustment/prd.md)
+- [API 規範文件](../../docs/api/wms-api.md)
+
+## 11. 變更記錄
+
+| 版本 | 日期 | 變更內容 | 作者 |
+|------|------|----------|------|
+| v1.0.0 | 2025-08-22 | 初始版本 | ERP Team |
+| v2.0.0 | 2025-08-25 | 新增即時更新、預警管理、盤點功能 | ERP Team |
 
 ---
 
-**文件狀態**: 草稿
-**下次審查日期**: 2025-08-29
+**文件狀態**: 規劃中
+**下次審查**: 2025-09-01
+**聯絡人**: wms@tsaitung.com
